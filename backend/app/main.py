@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-app = FastAPI()
+app = FastAPI(title="Portfolio Tracker API")
 
 origins = [
     "http://localhost",
@@ -16,9 +16,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-from app.api import portfolios
-
-app = FastAPI(title="Portfolio Tracker API")
 
 app.include_router(portfolios.router, prefix="/api")
 
