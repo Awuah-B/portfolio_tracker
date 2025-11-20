@@ -132,6 +132,24 @@ class MarketDataService:
             
         except:
             return False
+    
+    def get_asset_name(self, ticker: str) -> str:
+        """
+        Get the long name of an asset.
+        
+        Args:
+            ticker: Stock symbol.
+            
+        Returns:
+            The long name of the asset, or the ticker itself if not found.
+        """
+        try:
+            stock = yf.Ticker(ticker)
+            info = stock.info
+            return info.get('longName', ticker)
+        except Exception as e:
+            logger.warning(f"Could not fetch asset name for {ticker}: {e}")
+            return ticker
         
 if __name__ == "__main__":
     service = MarketDataService()
