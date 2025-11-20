@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
+from app.api import portfolios
 
 app = FastAPI(title="Portfolio Tracker API")
 
