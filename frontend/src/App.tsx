@@ -105,6 +105,7 @@ function App() {
   const [amount, setAmount] = useState('');
   const [avgCost, setAvgCost] = useState('');
   const [assetType, setAssetType] = useState('CRYPTO'); // Default asset type
+  const [selectedAssetTypeFilter, setSelectedAssetTypeFilter] = useState('CRYPTO'); // New state for filtering tickers
 
   // --- Fetch Portfolios ---
   useEffect(() => {
@@ -521,14 +522,16 @@ function App() {
                           const selectedTicker = ALL_FLATTENED_TICKERS.find(t => t.ticker === e.target.value);
                           if (selectedTicker) {
                             setSymbol(selectedTicker.ticker);
-                            setAssetType(selectedTicker.type.toLowerCase()); // Set asset type based on selected ticker, convert to lowercase
+                            // assetType is already set by selectedAssetTypeFilter, no need to infer again
                           }
                         }}
                         className="w-full appearance-none bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3.5 text-white focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
                     >
-                        {ALL_FLATTENED_TICKERS.map(s => (
-                        <option key={s.ticker} value={s.ticker}>{s.ticker} - {s.name}</option>
-                        ))}
+                        {ALL_FLATTENED_TICKERS
+                            .filter(s => s.type.toUpperCase() === selectedAssetTypeFilter)
+                            .map(s => (
+                                <option key={s.ticker} value={s.ticker}>{s.ticker} - {s.name}</option>
+                            ))}
                     </select>
                     <ChevronDown className="absolute right-4 top-4 w-4 h-4 text-slate-400 pointer-events-none" />
                   </div>
@@ -538,15 +541,31 @@ function App() {
                   <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Asset Type</label>
                   <div className="relative">
                     <select 
-                        value={assetType}
-                        onChange={(e) => setAssetType(e.target.value)}
+                        value={selectedAssetTypeFilter}
+                        onChange={(e) => {
+                          const newFilter = e.target.value;
+                          setSelectedAssetTypeFilter(newFilter);
+                          setAssetType(newFilter); // Also update the assetType state for submission
+
+                          // Reset symbol to the first available ticker of the new type
+                          const firstTickerOfType = ALL_FLATTENED_TICKERS.find(t => t.type.toUpperCase() === newFilter);
+                          if (firstTickerOfType) {
+                            setSymbol(firstTickerOfType.ticker);
+                          } else {
+                            setSymbol(''); // No tickers for this type
+                          }
+                        }}
                         className="w-full appearance-none bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3.5 text-white focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
                     >
-                        <option value="STOCK">Stock</option>
                         <option value="CRYPTO">Crypto</option>
+                        <option value="STOCK">Stock</option>
                         <option value="ETF">ETF</option>
                         <option value="COMMODITIES">Commodity</option>
                         <option value="BONDS">Bond</option>
+                        <option value="FOREX">Forex</option>
+                        <option value="INDEX">Index</option>
+                        <option value="MINER">Miner</option>
+                        <option value="UNKNOWN">Unknown</option>
                     </select>
                     <ChevronDown className="absolute right-4 top-4 w-4 h-4 text-slate-400 pointer-events-none" />
                   </div>
