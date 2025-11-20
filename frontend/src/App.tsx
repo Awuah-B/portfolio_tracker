@@ -11,46 +11,72 @@ import {
   Trash2, 
   RefreshCw,
   X,
-  Wallet,
   TrendingUp,
-  ChevronDown
+  TrendingDown,
+  ChevronDown,
+  Wallet,
+  ArrowUpRight,
+  ArrowDownRight,
+  Sparkles,
+  BarChart3,
+  Clock,
+  Star,
+  DollarSign,
+  AlertTriangle
 } from 'lucide-react';
+
+import ALL_TICKERS_DATA from '../tickers.json';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
-// ALL_TICKERS_DATA will be loaded from tickers.json
-import ALL_TICKERS_DATA from '../tickers.json';
-
-// Initialize MERGED_MARKET_DATA with all tickers from ALL_TICKERS_DATA
-const MERGED_MARKET_DATA: { [key: string]: { name: string; type: string } } = {};
-
-Object.values(ALL_TICKERS_DATA).forEach((category: any) => {
-  category.forEach((item: any) => {
-    MERGED_MARKET_DATA[item.ticker] = {
-      name: item.name,
-      type: 'Unknown' // Default type
-    };
-    // Attempt to infer type from category name
-    if (category === ALL_TICKERS_DATA.crypto_tickers) MERGED_MARKET_DATA[item.ticker].type = 'Crypto';
-    else if (category === ALL_TICKERS_DATA.stocks_tickers) MERGED_MARKET_DATA[item.ticker].type = 'Stock';
-    else if (category === ALL_TICKERS_DATA.forex_tickers) MERGED_MARKET_DATA[item.ticker].type = 'Forex';
-    else if (category === ALL_TICKERS_DATA.commodities_tickers) MERGED_MARKET_DATA[item.ticker].type = 'Commodity';
-    else if (category === ALL_TICKERS_DATA.etfs_tickers) MERGED_MARKET_DATA[item.ticker].type = 'ETF';
-    else if (category === ALL_TICKERS_DATA.indices_tickers) MERGED_MARKET_DATA[item.ticker].type = 'Index';
-    else if (category === ALL_TICKERS_DATA.bond_interests_tickers) MERGED_MARKET_DATA[item.ticker].type = 'Bond';
-    else if (category === ALL_TICKERS_DATA.miners_tickers) MERGED_MARKET_DATA[item.ticker].type = 'Miner';
+const flattenTickers = (data: any) => {
+  const allTickers: { ticker: string; name: string; type: string }[] = [];
+  Object.entries(data).forEach(([categoryKey, categoryValue]) => {
+    (categoryValue as any[]).forEach(item => {
+      let type = 'Unknown';
+      if (categoryKey === 'crypto_tickers') type = 'Crypto';
+      else if (categoryKey === 'stocks_tickers') type = 'Stock';
+      else if (categoryKey === 'forex_tickers') type = 'Forex';
+      else if (categoryKey === 'commodities_tickers') type = 'Commodity';
+      else if (categoryKey === 'etfs_tickers') type = 'ETF';
+      else if (categoryKey === 'indices_tickers') type = 'Index';
+      else if (categoryKey === 'bond_interests_tickers') type = 'Bond';
+      else if (categoryKey === 'miners_tickers') type = 'Miner';
+      allTickers.push({ ...item, type });
+    });
   });
-});
+  return allTickers;
+};
 
-interface Holding {
+const ALL_FLATTENED_TICKERS = flattenTickers(ALL_TICKERS_DATA);
+
+
+
+interface AssetInfo {
+  name: string;
+  type: string;
+}
+
+interface HoldingCalculatedResponse {
   id: string;
   portfolio_id: string;
   ticker: string;
   quantity: number;
   avg_cost: number;
-  asset_type: string; // Corresponds to backend's AssetType enum
+  asset_type: string;
   last_updated: string;
   current_price: number;
+  position_value: number;
+  cost_basis: number;
+  unrealised_gain: number;
+  unrealised_gain_percent: number;
+  asset_info?: AssetInfo;
+}
+
+interface AllocationItem {
+  name: string;
+  value: number;
+  type: string;
 }
 
 interface PortfolioSummary {
@@ -58,7 +84,9 @@ interface PortfolioSummary {
   total_value: number;
   total_cost_basis: number;
   total_unrealised_gain: number;
-  holdings: Holding[];
+  total_unrealised_gain_percent: number;
+  holdings: HoldingCalculatedResponse[];
+  allocation: AllocationItem[];
 }
 
 function App() {
@@ -127,52 +155,42 @@ function App() {
   // --- Calculations ---
   const portfolio = useMemo(() => {
     if (!portfolioSummary) {
-      return { id: '', name: 'No Portfolio', totalValue: 0, totalCost: 0, totalUnrealisedGain: 0, totalPercent: 0, items: [], allocation: [] };
+      return { 
+        id: '', 
+        name: 'No Portfolio', 
+        totalValue: 0, 
+        totalCost: 0, 
+        totalUnrealisedGain: 0, 
+        totalPercent: 0, 
+        items: [], 
+        allocation: [] 
+      };
     }
 
     const currentPortfolio = portfolios.find(p => p.id === selectedPortfolioId);
     const portfolioName = currentPortfolio ? currentPortfolio.name : 'No Portfolio';
 
-    let totalValue = portfolioSummary.total_value;
-    let totalCost = portfolioSummary.total_cost_basis;
-    let totalUnrealisedGain = portfolioSummary.total_unrealised_gain;
-
-    const items = portfolioSummary.holdings.map(asset => {
-      const position_value = asset.quantity * asset.current_price;
-      const cost_basis = asset.quantity * asset.avg_cost;
-      const unrealised_gain = position_value - cost_basis;
-      return { 
-        id: asset.id, 
-        portfolio_id: asset.portfolio_id, 
-        ticker: asset.ticker, 
-        quantity: asset.quantity, 
-        avg_cost: asset.avg_cost,
-        position_value, 
-        cost_basis, 
-        unrealised_gain, 
-        market: { price: asset.current_price, name: MERGED_MARKET_DATA[asset.ticker]?.name || asset.ticker, type: MERGED_MARKET_DATA[asset.ticker]?.type || 'Unknown' }
-      };
-    });
-
-    const totalPercent = totalCost > 0 ? (totalUnrealisedGain / totalCost) * 100 : 0;
-    const allocation = items.reduce((acc: any[], item) => {
-      const existing = acc.find(x => x.name === item.ticker);
-      if (existing) existing.value += item.position_value;
-      else acc.push({ name: item.ticker, value: item.position_value, type: item.market?.type || 'Unknown' });
-      return acc;
-    }, []).sort((a: any, b: any) => b.value - a.value);
-
-    return { 
-      id: portfolioSummary.portfolio_id, 
-      name: portfolioName, 
-      totalValue, 
-      totalCost, 
-      totalUnrealisedGain, 
-      totalPercent, 
-      items, 
-      allocation 
+    return {
+      id: portfolioSummary.portfolio_id,
+      name: portfolioName,
+      totalValue: portfolioSummary.total_value,
+      totalCost: portfolioSummary.total_cost_basis,
+      totalUnrealisedGain: portfolioSummary.total_unrealised_gain,
+      totalPercent: portfolioSummary.total_unrealised_gain_percent,
+      items: portfolioSummary.holdings,
+      allocation: portfolioSummary.allocation,
     };
   }, [portfolioSummary, selectedPortfolioId, portfolios]);
+
+  const bestPerformer = useMemo(() => {
+    if (portfolio.items.length === 0) return null;
+    return portfolio.items.reduce((a, b) => a.unrealised_gain > b.unrealised_gain ? a : b);
+  }, [portfolio.items]);
+
+  const worstPerformer = useMemo(() => {
+    if (portfolio.items.length === 0) return null;
+    return portfolio.items.reduce((a, b) => a.unrealised_gain < b.unrealised_gain ? a : b);
+  }, [portfolio.items]);
 
   // --- Actions ---
   const handleCreatePortfolio = async (e: React.FormEvent) => {
@@ -345,7 +363,7 @@ function App() {
           </div>
 
           {/* Metric Cards Grid - Styling Wrappers */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             <div className="glass-panel p-1 rounded-2xl relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <MetricCard 
@@ -360,9 +378,29 @@ function App() {
                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                <MetricCard 
                 title="Best Performer" 
-                value={portfolio.items.length > 0 ? portfolio.items.reduce((a, b) => a.unrealised_gain > b.unrealised_gain ? a : b).ticker : 'N/A'}
-                subValue={portfolio.items.length > 0 ? `${portfolio.items.reduce((a, b) => a.unrealised_gain > b.unrealised_gain ? a : b).unrealised_gain >= 0 ? '+' : ''}${((portfolio.items.reduce((a, b) => a.unrealised_gain > b.unrealised_gain ? a : b).unrealised_gain / portfolio.items.reduce((a, b) => a.unrealised_gain > b.unrealised_gain ? a : b).cost_basis) * 100).toFixed(2)}%` : '0%'}
-                trend={portfolio.items.length > 0 ? (portfolio.items.reduce((a, b) => a.unrealised_gain > b.unrealised_gain ? a : b).unrealised_gain >= 0 ? 'up' : 'down') : 'neutral'}
+                value={bestPerformer ? bestPerformer.ticker : 'N/A'}
+                subValue={bestPerformer ? `${bestPerformer.unrealised_gain >= 0 ? '+' : ''}${((bestPerformer.unrealised_gain / bestPerformer.cost_basis) * 100).toFixed(2)}%` : '0%'}
+                trend={bestPerformer ? (bestPerformer.unrealised_gain >= 0 ? 'up' : 'down') : 'neutral'}
+                isCurrency={false}
+              />
+            </div>
+            <div className="glass-panel p-1 rounded-2xl relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <MetricCard 
+                title="Portfolio Value" 
+                value={portfolio.totalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                subValue={`${portfolio.totalPercent >= 0 ? '+' : ''}${portfolio.totalPercent.toFixed(2)}% Overall`}
+                trend={portfolio.totalPercent >= 0 ? 'up' : 'down'}
+                isCurrency={true}
+              />
+            </div>
+            <div className="glass-panel p-1 rounded-2xl relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <MetricCard 
+                title="Worst Performer" 
+                value={worstPerformer ? worstPerformer.ticker : 'N/A'}
+                subValue={worstPerformer ? `${worstPerformer.unrealised_gain >= 0 ? '+' : ''}${((worstPerformer.unrealised_gain / worstPerformer.cost_basis) * 100).toFixed(2)}%` : '0%'}
+                trend={worstPerformer ? (worstPerformer.unrealised_gain >= 0 ? 'up' : 'down') : 'neutral'}
                 isCurrency={false}
               />
             </div>
@@ -380,20 +418,29 @@ function App() {
               </>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="bg-slate-800/50 p-6 rounded-xl border border-white/5">
+                <div className="bg-slate-800/50 p-6 rounded-xl border border-white/5 shadow-md hover:shadow-lg transition-shadow duration-300">
                   <h3 className="text-lg font-bold text-white mb-6">Asset Allocation</h3>
                   <div className="flex items-center justify-center">
                      <SimplePieChart data={portfolio.allocation} />
                   </div>
+                  <div className="mt-4 space-y-2">
+                    {portfolio.allocation.map((item) => (
+                      <div key={item.name} className="flex justify-between text-sm text-slate-300">
+                        <span>{item.name} ({item.type})</span>
+                        <span>${item.value.toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="bg-slate-800/50 p-6 rounded-xl border border-white/5">
+                <div className="bg-slate-800/50 p-6 rounded-xl border border-white/5 shadow-md hover:shadow-lg transition-shadow duration-300">
                   <h3 className="text-lg font-bold text-white mb-6">Performance Breakdown</h3>
                   <div className="space-y-5 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                     {portfolio.items.map(asset => (
-                      <div key={asset.ticker} className="group">
+                      <div key={asset.ticker} className="group bg-slate-700/30 p-4 rounded-lg hover:bg-slate-600/50 transition-colors">
                         <div className="flex justify-between text-sm mb-2">
                           <span className="text-slate-300 font-medium group-hover:text-white transition-colors">{asset.ticker}</span>
-                          <span className={`font-mono ${asset.unrealised_gain >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                          <span className={`font-mono flex items-center space-x-1 ${asset.unrealised_gain >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                            {asset.unrealised_gain >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
                             {asset.unrealised_gain >= 0 ? '+' : ''}{((asset.unrealised_gain / asset.cost_basis) * 100).toFixed(2)}%
                           </span>
                         </div>
@@ -416,7 +463,7 @@ function App() {
       {/* --- Create Portfolio Modal --- */}
       {isCreatePortfolioModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="glass-modal rounded-2xl w-full max-w-md relative p-1">
+          <div className="glass-modal rounded-2xl w-full max-w-md relative p-1 shadow-2xl">
             <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold text-white">New Portfolio</h2>
@@ -452,7 +499,7 @@ function App() {
       {/* --- Add Asset Modal --- */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="glass-modal rounded-2xl w-full max-w-md relative">
+          <div className="glass-modal rounded-2xl w-full max-w-md relative shadow-2xl">
             <div className="p-8">
                 <div className="flex justify-between items-center mb-6">
                     <div>
@@ -471,19 +518,16 @@ function App() {
                     <select 
                         value={symbol}
                         onChange={(e) => {
-                          setSymbol(e.target.value);
-                          // Attempt to infer asset type from MERGED_MARKET_DATA
-                          const inferredType = MERGED_MARKET_DATA[e.target.value]?.type;
-                          if (inferredType) {
-                            // Map frontend type string to backend enum string
-                            const backendAssetType = inferredType.toUpperCase();
-                            setAssetType(backendAssetType);
+                          const selectedTicker = ALL_FLATTENED_TICKERS.find(t => t.ticker === e.target.value);
+                          if (selectedTicker) {
+                            setSymbol(selectedTicker.ticker);
+                            setAssetType(selectedTicker.type.toUpperCase()); // Set asset type based on selected ticker
                           }
                         }}
                         className="w-full appearance-none bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3.5 text-white focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
                     >
-                        {Object.keys(MERGED_MARKET_DATA).map(s => (
-                        <option key={s} value={s}>{s} - {MERGED_MARKET_DATA[s].name}</option>
+                        {ALL_FLATTENED_TICKERS.map(s => (
+                        <option key={s.ticker} value={s.ticker}>{s.ticker} - {s.name}</option>
                         ))}
                     </select>
                     <ChevronDown className="absolute right-4 top-4 w-4 h-4 text-slate-400 pointer-events-none" />
