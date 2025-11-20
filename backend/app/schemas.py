@@ -33,7 +33,6 @@ class PortfolioSummaryResponse(BaseModel):
     holdings: list
 
 class PortfolioCreate(BaseModel):
-    id: str
     name: str
 
 class PortfolioResponse(BaseModel):
