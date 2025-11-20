@@ -34,6 +34,11 @@ class HoldingCalculatedResponse(HoldingBase):
     class Config:
         from_attributes = True
 
+class AllocationItem(BaseModel):
+    name: str
+    value: float
+    type: str
+
 class PortfolioSummaryResponse(BaseModel):
     portfolio_id: str
     total_value: float
@@ -41,12 +46,7 @@ class PortfolioSummaryResponse(BaseModel):
     total_unrealised_gain: float
     total_unrealised_gain_percent: float
     holdings: List[HoldingCalculatedResponse]
-    allocation: List['AllocationItem']
-
-class AllocationItem(BaseModel):
-    name: str
-    value: float
-    type: str
+    allocation: List[AllocationItem]
 
 class PortfolioCreate(BaseModel):
     name: str
