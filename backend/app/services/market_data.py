@@ -1,7 +1,7 @@
 import time
 import threading
 from typing import Optional, Dict, Any, List
-from datetime import datetime
+from datetime import datetime, timedelta
 import yfinance as yf
 from app.utils.set_logs import setup_logger
 
@@ -151,5 +151,26 @@ class MarketDataService:
             logger.warning(f"Could not fetch asset name for {ticker}: {e}")
             return ticker
         
+    def get_price_at_date(self, ticker: str, date: datetime) -> Optional[float]:
+        """
+        Get the closing price for a ticker on a specific date.
+        
+        Args:
+            ticker: Stock symbol.
+            date: The specific date to get the price for.
+            
+        Returns:
+            The closing price on the specified date, or None if not found.
+        """
+        # yfinance's history function is inclusive for start date, exclusive for end date.
+        # To get price for 'date', we query from 'date' to 'date + 1 day'.
+        end_date = date + timedelta(days=1)
+        historical_data = self.get_historical_prices(ticker, start_date=date, end_date=end_date)
+        
+        if historical_data and len(historical_data) > 0:
+            # The first entry should be the price for the requested date
+            return historical_data[0]['close']
+        return None
+
 if __name__ == "__main__":
     service = MarketDataService()

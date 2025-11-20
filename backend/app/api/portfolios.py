@@ -6,6 +6,7 @@ from app.services.market_data import MarketDataService
 from app import schemas
 import uuid
 from typing import List
+from datetime import datetime # Import datetime
 
 router = APIRouter()
 market_data_service = MarketDataService()
@@ -62,8 +63,8 @@ async def add_holding_to_portfolio(
         id=str(uuid.uuid4()),
         portfolio_id=portfolio_id,
         ticker=holding.ticker,
-        quantity=holding.quantity,
-        avg_cost=holding.avg_cost,
+        initial_investment=holding.initial_investment,
+        purchase_date=holding.purchase_date,
         asset_type=holding.asset_type
     )
     db.add(db_holding)
@@ -71,15 +72,16 @@ async def add_holding_to_portfolio(
     db.refresh(db_holding)
 
     current_price = market_data_service.get_current_price(db_holding.ticker)
-    return schemas.HoldingResponse(
+    return schemas.HoldingCalculatedResponse( # Corrected schema
         id=db_holding.id,
         portfolio_id=db_holding.portfolio_id,
         ticker=db_holding.ticker,
-        quantity=float(db_holding.quantity),
-        avg_cost=float(db_holding.avg_cost),
+        initial_investment=float(db_holding.initial_investment),
+        purchase_date=db_holding.purchase_date,
         asset_type=db_holding.asset_type,
         last_updated=db_holding.last_updated,
-        current_price=current_price
+        current_price=current_price,
+        percentage_change=0.0 # Placeholder, will be calculated in summary
     )
 
 @router.put("/holdings/{holding_id}", response_model=schemas.HoldingCalculatedResponse)
@@ -92,24 +94,25 @@ async def update_holding(
     if not db_holding:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Holding not found")
 
-    if holding_update.quantity is not None:
-        db_holding.quantity = holding_update.quantity
-    if holding_update.avg_cost is not None:
-        db_holding.avg_cost = holding_update.avg_cost
+    if holding_update.initial_investment is not None:
+        db_holding.initial_investment = holding_update.initial_investment
+    if holding_update.purchase_date is not None:
+        db_holding.purchase_date = holding_update.purchase_date
     
     db.commit()
     db.refresh(db_holding)
 
     current_price = market_data_service.get_current_price(db_holding.ticker)
-    return schemas.HoldingResponse(
+    return schemas.HoldingCalculatedResponse( # Corrected schema
         id=db_holding.id,
         portfolio_id=db_holding.portfolio_id,
         ticker=db_holding.ticker,
-        quantity=float(db_holding.quantity),
-        avg_cost=float(db_holding.avg_cost),
+        initial_investment=float(db_holding.initial_investment),
+        purchase_date=db_holding.purchase_date,
         asset_type=db_holding.asset_type,
         last_updated=db_holding.last_updated,
-        current_price=current_price
+        current_price=current_price,
+        percentage_change=0.0 # Placeholder, will be calculated in summary
     )
 
 @router.delete("/holdings/{holding_id}", status_code=status.HTTP_204_NO_CONTENT)

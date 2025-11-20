@@ -48,8 +48,8 @@ class Holding(Base):
     id = Column(String, primary_key=True)
     portfolio_id = Column(String, ForeignKey("portfolios.id", ondelete="CASCADE"))
     ticker = Column(String, nullable=False, index=True)
-    quantity = Column(Numeric(20, 8))
-    avg_cost = Column(Numeric(20, 2))
+    initial_investment = Column(Numeric(20, 2))
+    purchase_date = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     asset_type = Column(Enum(AssetType), nullable=False)
     last_updated = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 

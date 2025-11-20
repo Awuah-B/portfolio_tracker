@@ -1,16 +1,21 @@
+export type Portfolio = {
+  id: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Holding = {
-  ticker: string;
-  position_value: number;
-  cost_basis: number;
-  unrealised_gain: number;
-};
-
-type Portfolio = {
+  id: string;
   portfolio_id: string;
-  total_value: number;
-  total_cost_basis: number;
-  total_unrealised_gain: number;
-  holdings: Holding[];
+  ticker: string;
+  initial_investment: number;
+  purchase_date: string;
+  asset_type: string;
+  last_updated: string;
+  current_price: number;
+  // These are calculated fields, not directly from DB
+  percentage_change: number;
+  // Optional: market data for display
+  market?: { name: string; price: number; type: string };
 };
-
-export default Portfolio;
