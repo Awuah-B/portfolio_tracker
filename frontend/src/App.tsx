@@ -229,7 +229,7 @@ function App() {
         ticker: symbol, 
         quantity: parseFloat(amount), 
         avg_cost: parseFloat(avgCost),
-        asset_type: assetType // Include asset type
+        asset_type: assetType.toLowerCase() // Convert to lowercase to match backend Enum
       });
       // Re-fetch portfolio summary to update holdings and calculations
       const summaryResponse = await axios.get(`${API_BASE_URL}/portfolios/${selectedPortfolioId}`);
@@ -521,7 +521,7 @@ function App() {
                           const selectedTicker = ALL_FLATTENED_TICKERS.find(t => t.ticker === e.target.value);
                           if (selectedTicker) {
                             setSymbol(selectedTicker.ticker);
-                            setAssetType(selectedTicker.type.toUpperCase()); // Set asset type based on selected ticker
+                            setAssetType(selectedTicker.type.toLowerCase()); // Set asset type based on selected ticker, convert to lowercase
                           }
                         }}
                         className="w-full appearance-none bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3.5 text-white focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
