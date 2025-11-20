@@ -44,7 +44,7 @@ async def delete_portfolio(portfolio_id: str, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Portfolio deleted successfully"}
 
-@router.post("/portfolios/{portfolio_id}/holdings", response_model=schemas.HoldingResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/portfolios/{portfolio_id}/holdings", response_model=schemas.HoldingCalculatedResponse, status_code=status.HTTP_201_CREATED)
 async def add_holding_to_portfolio(
     portfolio_id: str,
     holding: schemas.HoldingBase,
@@ -82,7 +82,7 @@ async def add_holding_to_portfolio(
         current_price=current_price
     )
 
-@router.put("/holdings/{holding_id}", response_model=schemas.HoldingResponse)
+@router.put("/holdings/{holding_id}", response_model=schemas.HoldingCalculatedResponse)
 async def update_holding(
     holding_id: str,
     holding_update: schemas.HoldingUpdate,
