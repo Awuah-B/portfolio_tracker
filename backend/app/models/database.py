@@ -4,15 +4,17 @@ from sqlalchemy.orm import relationship, sessionmaker
 from datetime import datetime, timezone
 import enum
 import os
-from dotenv import load_dotenv
 
-from set_logs import setup_logger
+from app.utils.set_logs import setup_logger
+from app.exceptions import ConfigurationError
+from app.config import CONFIG
+logger = setup_logger('database.log')
 
-logger = setup_logger(__name__)
 
-load_dotenv()
+DATABASE_URL = CONFIG.database_url
+if not DATABASE_URL:
+    raise ConfigurationError("Required environment variable DATABASE_URL is not set. Set it to your database connection URL.")
 
-DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
@@ -21,6 +23,9 @@ class AssetType(str, enum.Enum):
     STOCK = "stock"
     CRYPTO = "crypto"
     ETF = "etf"
+    COMMODITIES = "commodities"
+    BONDS = "bonds"
+    
 
 class TradeType(str, enum.Enum):
     BUY = "buy"
@@ -34,9 +39,10 @@ class Portfolio(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
-    holdings = relationship("Holding", back_populates="portfolios", cascade="all, delete-orphan")
+    # One portfolio -> many holdings
+    holdings = relationship("Holding", back_populates="portfolio", cascade="all, delete-orphan")
 
-class Holdings(Base):
+class Holding(Base):
     __tablename__ = "holdings"
 
     id = Column(String, primary_key=True)
@@ -47,6 +53,7 @@ class Holdings(Base):
     asset_type = Column(Enum(AssetType), nullable=False)
     last_updated = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
+    # Many holdings -> one portfolio
     portfolio = relationship("Portfolio", back_populates="holdings")
     trades = relationship("Trade", back_populates="holding", cascade="all, delete-orphan")
 
@@ -77,6 +84,13 @@ class PriceCache(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     
     __table_args__ = (UniqueConstraint('ticker', 'date', name='_ticker_date_uc'),)
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 def init_db():
     Base.metadata.create_all(bind=engine)

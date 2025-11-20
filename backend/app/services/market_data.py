@@ -3,7 +3,7 @@ import threading
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 import yfinance as yf
-from set_logs import setup_logger
+from app.utils.set_logs import setup_logger
 
 logger = setup_logger(__name__)
 
@@ -106,9 +106,12 @@ class MarketDataService:
 
         for ticker in tickers:
             price = self.get_current_price(ticker)
-            if price:
+            if price is not None:
                 prices[ticker] = price
-            time.sleep(0.5) 
+            # small throttle to avoid hitting provider limits
+            time.sleep(0.5)
+
+        return prices
     
     def validate_ticker(self, ticker: str) -> bool:
         """

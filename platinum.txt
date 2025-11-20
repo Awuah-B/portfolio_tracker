@@ -1,0 +1,60 @@
+
+What will be tracked?
+
+. Stocks, Crypo, ETFs etc
+
+. Realised  and Unrealised gains
+
+
+Data Level
+
+. Portfolio performance
+. Per-asset performance
+
+Update frequency
+
+. End of day
+
+. Per hour
+
+Market Provider - Yahoo finance (free, limited) Initial
+
+We need:
+Quote data
+Historical data
+
+Database schema
+
+Portfolio	
+	id - 
+	name -
+	created_at
+Holdings
+	portfolio_id -
+	ticker -
+	quantity(optional) -
+	avg_cost -
+	last_updated
+Trades
+	holding_id -
+	ticker
+	buy_or_sell
+	price
+	date
+
+Price History Cache
+	ticker
+	date
+	close_price
+
+Business logic ( gains, YoY, MoM, Current Holdings (Portfolio value)
+Performance charts
+Benchmark Comparison (S&P, Nasdaq100 etc)
+
+Python-For backend
+Supabase - PostgerSQL for database
+
+
+
+
+Add list of stock to a basket, compute price change from the date of addition
