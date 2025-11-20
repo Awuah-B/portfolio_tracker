@@ -8,7 +8,6 @@ import {
   X
 } from 'lucide-react';
 import MetricCard from './MetricCard';
-import SimplePieChart from './SimplePieChart'; // Assuming this component will be updated to use new data
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
@@ -266,16 +265,7 @@ const PortfolioOverviewScreen: React.FC = () => {
 
           {/* Metric Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-            <div className="glass-panel p-1 rounded-2xl relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <MetricCard 
-                title="Total Current Value" 
-                value={portfolio.totalCurrentValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                subValue={`${isPositiveChange ? '+' : ''}${portfolio.totalPercentageChange.toFixed(2)}%`}
-                trend={isPositiveChange ? 'up' : 'down'}
-                isCurrency={true}
-              />
-            </div>
+            
             {/* Placeholder for other metric cards */}
             <div className="glass-panel p-1 rounded-2xl relative overflow-hidden group">
                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -315,26 +305,6 @@ const PortfolioOverviewScreen: React.FC = () => {
             {/* This is where a performance chart component would go */}
             <div className="flex items-center justify-center h-48 text-slate-500">
               [Performance Chart Placeholder]
-            </div>
-          </div>
-
-          {/* Asset Allocation Chart */}
-          <div className="glass-panel rounded-2xl p-6 md:p-8 min-h-[300px]">
-            <h3 className="text-lg font-bold text-white mb-6">Asset Allocation</h3>
-            <div className="flex items-center justify-center mb-6">
-              {portfolio.allocation.length > 0 ? (
-                <SimplePieChart data={portfolio.allocation} />
-              ) : (
-                <p className="text-slate-400">No allocation data available.</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              {portfolio.allocation.map((item) => (
-                <div key={item.name} className="flex justify-between text-sm text-slate-300">
-                  <span>{item.name} ({item.type})</span>
-                  <span>${item.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                </div>
-              ))}
             </div>
           </div>
         </main>

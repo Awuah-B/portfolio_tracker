@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom';
 import type { Holding, Portfolio } from '../types/Portfolio';
 import { supabase } from '../supabaseClient';
 import HoldingsTable from './HoldingsTable';
-import MetricCard from './MetricCard';
 
 interface PortfolioSummary {
   portfolio_id: string;
@@ -74,24 +73,9 @@ const PortfolioDetailScreen: React.FC = () => {
     return <div className="text-white text-center py-8">Portfolio not found.</div>;
   }
 
-  const isPositiveChange = summary && summary.total_percentage_change >= 0;
-
   return (
     <div className="container mx-auto p-6 bg-slate-900 min-h-screen text-white">
       <h1 className="text-4xl font-bold mb-8 text-center">{portfolio.name} Details</h1>
-
-      {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <MetricCard
-            title="Total Current Value"
-            value={summary.total_current_value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            subValue={`${isPositiveChange ? '+' : ''}${summary.total_percentage_change.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`}
-            trend={isPositiveChange ? 'up' : 'down'}
-            isCurrency={true}
-          />
-          {/* Add other metric cards here if needed */}
-        </div>
-      )}
 
       <div className="mb-8">
         <h2 className="text-2xl font-semibold mb-4">Holdings</h2>
