@@ -115,7 +115,7 @@ class MarketDataService:
     
     def validate_ticker(self, ticker: str) -> bool:
         """
-        Check if ticker exists
+        Check if ticker exists by attempting to fetch a small amount of historical data.
         
         Args:
             ticker: Stock symbol to validate
@@ -125,12 +125,12 @@ class MarketDataService:
         """
         try:
             stock = yf.Ticker(ticker)
-            info = stock.info
+            # Attempt to get 1 day of history. If data is returned, ticker is likely valid.
+            data = stock.history(period='1d')
+            return not data.empty
             
-            # If we can get basic info, ticker is valid
-            return 'symbol' in info or 'regularMarketPrice' in info
-            
-        except:
+        except Exception as e:
+            logger.warning(f"Ticker validation failed for {ticker}: {e}")
             return False
     
     def get_asset_name(self, ticker: str) -> str:
