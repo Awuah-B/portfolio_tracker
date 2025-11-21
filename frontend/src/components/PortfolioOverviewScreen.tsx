@@ -1,32 +1,25 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import type { Portfolio } from '../types/Portfolio';
 import { 
-  Trash2, 
-  RefreshCw,
-  X
+  X,
+  Plus,
+  Wallet,
+  Activity,
+  BarChart3,
+  ChevronRight
 } from 'lucide-react';
-import MetricCard from './MetricCard';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-
-interface PortfolioSummary {
-  portfolio_id: string;
-  total_current_value: number;
-  total_percentage_change: number;
-  holdings: any[]; // HoldingCalculatedResponse[]
-  allocation: any[]; // AllocationItem[]
-}
 
 const PortfolioOverviewScreen: React.FC = () => {
   const navigate = useNavigate();
   const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
   const [selectedPortfolioId, setSelectedPortfolioId] = useState<string | null>(null);
-  const [portfolioSummary, setPortfolioSummary] = useState<PortfolioSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState(false); // State for create portfolio form
+  const [isCreating, setIsCreating] = useState(false);
   const [newPortfolioName, setNewPortfolioName] = useState('');
 
   // --- Fetch Portfolios ---
@@ -38,275 +31,231 @@ const PortfolioOverviewScreen: React.FC = () => {
         if (response.data && response.data.length > 0 && !selectedPortfolioId) {
           setSelectedPortfolioId(response.data[0].id);
         }
-      } catch (err) {
+      } catch (err: unknown) {
+        let errorMessage = "Failed to fetch portfolios.";
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        }
         console.error("Error fetching portfolios:", err);
-        setError("Failed to fetch portfolios.");
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
     };
     fetchPortfolios();
-  }, []);
-
-  // --- Fetch Portfolio Summary ---
-  useEffect(() => {
-    const fetchPortfolioSummary = async () => {
-      if (!selectedPortfolioId) {
-        setPortfolioSummary(null);
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      try {
-        const response = await axios.get(`${API_BASE_URL}/portfolios/${selectedPortfolioId}`);
-        setPortfolioSummary(response.data);
-      } catch (err) {
-        console.error("Error fetching portfolio summary:", err);
-        setError("Failed to fetch portfolio summary.");
-        setPortfolioSummary(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPortfolioSummary();
-    const interval = setInterval(fetchPortfolioSummary, 180000); 
-    return () => clearInterval(interval);
   }, [selectedPortfolioId]);
-
-  // --- Calculations ---
-  const portfolio = useMemo(() => {
-    if (!portfolioSummary) {
-      return { 
-        id: '', 
-        name: 'No Portfolio', 
-        totalCurrentValue: 0, 
-        totalPercentageChange: 0, 
-        items: [], 
-        allocation: [] 
-      };
-    }
-
-    const currentPortfolio = portfolios.find(p => p.id === selectedPortfolioId);
-    const portfolioName = currentPortfolio ? currentPortfolio.name : 'No Portfolio';
-
-    return {
-      id: portfolioSummary.portfolio_id,
-      name: portfolioName,
-      totalCurrentValue: portfolioSummary.total_current_value,
-      totalPercentageChange: portfolioSummary.total_percentage_change,
-      items: portfolioSummary.holdings,
-      allocation: portfolioSummary.allocation,
-    };
-  }, [portfolioSummary, selectedPortfolioId, portfolios]);
 
   // --- Create Portfolio ---
   const createPortfolio = async () => {
     if (!newPortfolioName.trim()) return;
     try {
-      const response = await axios.post(`${API_BASE_URL}/portfolios`, { name: newPortfolioName.trim() });
+      const response = await axios.post(`${API_BASE_URL}/portfolios`, { 
+        name: newPortfolioName.trim() 
+      });
       setPortfolios(prev => [...prev, response.data]);
       setSelectedPortfolioId(response.data.id);
       setNewPortfolioName('');
       setIsCreating(false);
       setError(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error creating portfolio:", err);
-      setError(err.response?.data?.detail || "Failed to create portfolio.");
+      let errorMessage = "Failed to create portfolio.";
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (axios.isAxiosError(err) && err.response?.data?.detail) {
+        errorMessage = err.response.data.detail;
+      }
+      setError(errorMessage);
     }
   };
 
-  // --- Delete Portfolio ---
-  const handleDeletePortfolio = async () => {
-    if (!selectedPortfolioId || !window.confirm("Are you sure you want to delete this portfolio and all its holdings?")) return;
-    try {
-      await axios.delete(`${API_BASE_URL}/portfolios/${selectedPortfolioId}`);
-      setPortfolios(prev => prev.filter(p => p.id !== selectedPortfolioId));
-      setSelectedPortfolioId(null);
-      setPortfolioSummary(null);
-      setError(null);
-    } catch (err) {
-      console.error("Error deleting portfolio:", err);
-      setError("Failed to delete portfolio.");
-    }
-  };
-
-  if (loading) return <div className="h-screen w-full bg-[#0f172a] flex items-center justify-center"><RefreshCw className="animate-spin w-8 h-8 text-indigo-500" /></div>;
-
-  const isPositiveChange = portfolio.totalPercentageChange >= 0;
+  // --- Loading State ---
+  if (loading) {
+    return (
+      <div className="h-screen w-full bg-black flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="relative">
+            <div className="w-12 h-12 border-2 border-orange-500/20 rounded-full" />
+            <div className="w-12 h-12 border-2 border-orange-500 border-t-transparent rounded-full animate-spin absolute inset-0" />
+          </div>
+          <p className="text-zinc-500 text-xs font-mono uppercase tracking-widest">Loading Terminal...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen text-slate-100 font-sans selection:bg-indigo-500/30">
+    <div className="min-h-screen bg-black text-zinc-100 font-sans selection:bg-orange-500/30">
       
-      <div className="flex max-w-[1600px] mx-auto">
+      {/* Top Terminal Bar */}
+      <header className="h-8 bg-zinc-950 border-b border-zinc-800 flex items-center px-4 justify-between">
+        <div className="flex items-center gap-3 text-xs font-mono text-zinc-500">
+          <span className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+            LIVE
+          </span>
+          <span>{new Date().toLocaleTimeString()}</span>
+        </div>
+      </header>
+
+      <div className="flex">
         
-        {/* Desktop Sidebar - Only Portfolio Management */}
-        <aside className="hidden md:flex flex-col w-72 h-screen sticky top-0 p-6 border-r border-white/5 bg-[#0f172a]/50 backdrop-blur-sm">
-          <h1 className="text-2xl font-bold text-white mb-8 tracking-tight">Portfolio Tracker</h1>
+        {/* Sidebar */}
+        <aside className="hidden md:flex flex-col w-64 h-[calc(100vh-2rem)] sticky top-8 border-r border-zinc-800 bg-zinc-950">
           
-          {/* Portfolio Selector */}
-          <div className="flex-1">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 ml-2">Active Portfolio</p>
-            <div className="relative group">
-              <select
-                value={selectedPortfolioId || ''}
-                onChange={(e) => setSelectedPortfolioId(e.target.value)}
-                className="w-full appearance-none bg-slate-900/50 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent block px-4 py-3 pr-8 outline-none transition-all cursor-pointer hover:bg-slate-800"
-              >
-                {portfolios.map(p => (<option key={p.id} value={p.id}>{p.name}</option>))}
-                {portfolios.length === 0 && <option value="">No Portfolios</option>}
-              </select>
+          {/* Quick Stats */}
+          <div className="p-4 space-y-1">
+            <div className="flex items-center justify-between py-2">
+              <span className="text-[10px] font-mono text-zinc-500">POSITIONS</span>
+              <span className="text-sm font-mono text-zinc-100">--</span>
             </div>
-            <button 
-              onClick={() => setIsCreating(true)}
-              className="mt-3 w-full flex items-center justify-center space-x-2 text-xs font-medium text-indigo-400 hover:text-indigo-300 py-2 hover:bg-indigo-500/10 rounded-lg transition-colors"
-            >
-              <span>Create New Portfolio</span>
-            </button>
-            {isCreating && (
-              <div className="mt-4 p-4 bg-slate-800/50 rounded-xl border border-white/5">
-                <form 
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    createPortfolio();
-                  }} 
-                  className="space-y-4"
-                >
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Name</label>
-                    <input 
-                      type="text" 
-                      required
-                      value={newPortfolioName}
-                      onChange={(e) => setNewPortfolioName(e.target.value)}
-                      placeholder="e.g., Long Term Hodl"
-                      className="w-full bg-slate-700/50 border border-slate-600/50 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-sm"
-                    />
-                  </div>
-                  <div className="flex space-x-3">
-                    <button 
-                      type="button"
-                      onClick={() => setIsCreating(false)}
-                      className="flex-1 bg-slate-700/50 text-slate-400 py-2 rounded-lg text-sm font-medium hover:bg-slate-600/50 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button 
-                      type="submit"
-                      className="flex-1 bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-indigo-500 transition-colors"
-                    >
-                      Create
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
           </div>
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 md:p-10 overflow-y-auto pb-24">
+        <main className="flex-1 p-6">
           
-          {/* Content Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+          {/* Page Header */}
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
-                {portfolio.name} Overview
-              </h1>
-              <div className="flex items-center space-x-2 mt-2">
-                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                <p className="text-slate-400 text-sm font-medium">Live Market Updates Active</p>
+              <div className="flex items-center gap-2 mb-1">
+                <BarChart3 className="w-5 h-5 text-orange-500" />
+                <h1 className="text-xl font-semibold text-zinc-100 tracking-tight">
+                  Portfolio Overview
+                </h1>
               </div>
 
-              {/* Mobile Portfolio Controls */}
-              <div className="md:hidden mt-6">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Active Portfolio</p>
-                <div className="relative group mb-3">
-                  <select
-                    value={selectedPortfolioId || ''}
-                    onChange={(e) => setSelectedPortfolioId(e.target.value)}
-                    className="w-full appearance-none bg-slate-900/50 border border-white/10 text-white text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent block px-4 py-3 pr-8 outline-none transition-all cursor-pointer hover:bg-slate-800"
-                  >
-                    {portfolios.map(p => (<option key={p.id} value={p.id}>{p.name}</option>))}
-                    {portfolios.length === 0 && <option value="">No Portfolios</option>}
-                  </select>
-                </div>
+              {/* Mobile Controls */}
+              <div className="md:hidden mt-4 space-y-3">
+                <select
+                  value={selectedPortfolioId || ''}
+                  onChange={(e) => setSelectedPortfolioId(e.target.value)}
+                  className="w-full bg-zinc-900 border border-zinc-700 text-zinc-100 text-sm font-mono rounded px-3 py-2 focus:border-orange-500 outline-none"
+                >
+                  {portfolios.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                  {portfolios.length === 0 && <option value="">NO PORTFOLIOS</option>}
+                </select>
+                <button 
+                  onClick={() => setIsCreating(true)}
+                  className="w-full flex items-center justify-center gap-2 text-xs font-mono text-orange-500 hover:text-orange-400 py-2 border border-zinc-800 rounded transition-colors"
+                >
+                  <Plus className="w-3 h-3" />
+                  NEW PORTFOLIO
+                </button>
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
-              {selectedPortfolioId && (
-                <button 
-                  onClick={handleDeletePortfolio}
-                  className="p-2.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                  title="Delete Portfolio"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
-              )}
-              <button 
-                onClick={() => navigate(`/portfolios/${selectedPortfolioId}`)}
-                className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 hover:-translate-y-0.5 active:translate-y-0"
-              >
-                <span>View Details</span>
-              </button>
-            </div>
+            {/* Action Button */}
+            <button 
+              onClick={() => navigate(`/portfolios/${selectedPortfolioId}`)}
+              disabled={!selectedPortfolioId}
+              className="flex items-center gap-2 bg-orange-500 hover:bg-orange-400 disabled:bg-zinc-800 disabled:text-zinc-600 text-black font-semibold text-sm px-5 py-2.5 rounded transition-all disabled:cursor-not-allowed"
+            >
+              <span>View Details</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
 
-          {/* Global Error Message */}
+          {/* Error Alert */}
           {error && (
-            <div className="glass-panel p-4 mb-6 text-rose-400 text-sm rounded-xl border border-rose-500/20 flex items-center justify-between">
-              <span>{error}</span>
-              <button onClick={() => setError(null)} className="text-rose-400 hover:text-rose-300">
+            <div className="bg-red-950/50 border border-red-900 rounded p-3 mb-6 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-red-500 text-xs font-mono uppercase">Error:</span>
+                <span className="text-red-400 text-sm">{error}</span>
+              </div>
+              <button onClick={() => setError(null)} className="text-red-500 hover:text-red-400 transition-colors">
                 <X className="w-4 h-4" />
               </button>
             </div>
           )}
 
-          {/* Metric Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-            
-            {/* Placeholder for other metric cards */}
-            <div className="glass-panel p-1 rounded-2xl relative overflow-hidden group">
-               <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-               <MetricCard 
-                title="Total Percentage Change" 
-                value={`${isPositiveChange ? '+' : ''}${portfolio.totalPercentageChange.toFixed(2)}%`}
-                subValue="Overall Portfolio"
-                trend={isPositiveChange ? 'up' : 'down'}
-                isCurrency={false}
-              />
+          {/* Create Portfolio Modal */}
+          {isCreating && (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-6 w-full max-w-md shadow-2xl">
+                <div className="mb-4">
+                  <label className="block text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-2">
+                    Portfolio Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g., EQUITY_GROWTH_2024"
+                    value={newPortfolioName}
+                    onChange={(e) => setNewPortfolioName(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-700 text-zinc-100 text-sm font-mono rounded px-4 py-3 focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 outline-none placeholder-zinc-600 transition-all"
+                    autoFocus
+                  />
+                </div>
+                <div className="flex justify-end gap-3">
+                  <button 
+                    onClick={() => { setIsCreating(false); setNewPortfolioName(''); }} 
+                    className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={createPortfolio} 
+                    className="px-5 py-2 bg-orange-500 hover:bg-orange-400 text-black font-semibold text-sm rounded transition-colors"
+                  >
+                    Create
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="glass-panel p-1 rounded-2xl relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <MetricCard 
-                title="Number of Holdings" 
-                value={portfolio.items.length.toString()}
-                subValue="Assets in Portfolio"
-                trend="neutral"
-                isCurrency={false}
-              />
-            </div>
-            <div className="glass-panel p-1 rounded-2xl relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <MetricCard 
-                title="Asset Allocation" 
-                value="View Chart"
-                subValue="Distribution of Assets"
-                trend="neutral"
-                isCurrency={false}
-              />
-            </div>
-          </div>
+          )}
 
-          {/* Performance Chart Placeholder */}
-          <div className="glass-panel rounded-2xl p-6 md:p-8 min-h-[300px] mb-10">
-            <h3 className="text-lg font-bold text-white mb-6">Portfolio Performance Chart</h3>
-            {/* This is where a performance chart component would go */}
-            <div className="flex items-center justify-center h-48 text-slate-500">
-              [Performance Chart Placeholder]
+          {/* Empty State */}
+          {portfolios.length === 0 && (
+            <div className="border border-zinc-800 rounded-lg p-12 text-center bg-zinc-950/50">
+              <div className="w-16 h-16 mx-auto mb-6 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+                <Wallet className="w-8 h-8 text-zinc-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-zinc-100 mb-2">No Portfolios</h3>
+              <p className="text-zinc-500 text-sm mb-6 max-w-xs mx-auto font-mono">
+                Create your first portfolio to begin tracking positions and performance.
+              </p>
+              <button 
+                onClick={() => setIsCreating(true)} 
+                className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-black font-semibold text-sm px-5 py-2.5 rounded transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Create Portfolio
+              </button>
             </div>
-          </div>
+          )}
+
+          {/* Performance Panel */}
+          {portfolios.length > 0 && (
+            <div className="border border-zinc-800 rounded-lg bg-zinc-950/50 overflow-hidden">
+              
+              {/* Panel Header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-zinc-900/50">
+                <div className="flex items-center gap-4 text-xs font-mono">
+                  <button className="text-zinc-500 hover:text-orange-500 transition-colors">1D</button>
+                  <button className="text-zinc-500 hover:text-orange-500 transition-colors">1W</button>
+                  <button className="text-orange-500">1M</button>
+                  <button className="text-zinc-500 hover:text-orange-500 transition-colors">1Y</button>
+                  <button className="text-zinc-500 hover:text-orange-500 transition-colors">ALL</button>
+                </div>
+              </div>
+              
+              {/* Chart Area */}
+              <div className="p-6 min-h-[350px] flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+                    <Activity className="w-8 h-8 text-zinc-700" />
+                  </div>
+                  <p className="text-zinc-400 text-sm font-medium mb-1">Performance Data</p>
+                  <p className="text-zinc-600 text-xs font-mono">Awaiting market data feed</p>
+                </div>
+              </div>
+
+              {/* Panel Footer Stats */}
+              
+            </div>
+          )}
         </main>
       </div>
     </div>

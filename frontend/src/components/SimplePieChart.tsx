@@ -14,17 +14,30 @@ const SimplePieChart: React.FC<SimplePieChartProps> = ({ data }) => {
   if (!data || data.length === 0) return <div className="text-center text-slate-500 py-10">No data to chart</div>;
 
   // Calculate Conic Gradient
-  let currentAngle = 0;
   const total = data.reduce((sum, item) => sum + item.value, 0);
   const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#6366f1'];
   
-  const segments = data.map((item, i) => {
+  interface Segment {
+    segment: string;
+    color: string;
+    name: string;
+    value: number;
+    type: string;
+    percentage: number;
+  }
+
+  const segments = data.reduce((acc: { segments: Segment[]; currentAngle: number }, item, i) => {
     const percentage = (item.value / total) * 100;
     const degrees = (percentage / 100) * 360;
-    const segment = `${colors[i % colors.length]} ${currentAngle}deg ${currentAngle + degrees}deg`;
-    currentAngle += degrees;
-    return { segment, color: colors[i % colors.length], ...item, percentage };
-  });
+    const startAngle = acc.currentAngle;
+    const endAngle = acc.currentAngle + degrees;
+    const segment = `${colors[i % colors.length]} ${startAngle}deg ${endAngle}deg`;
+    
+    acc.segments.push({ segment, color: colors[i % colors.length], ...item, percentage });
+    acc.currentAngle += degrees;
+    
+    return acc;
+  }, { segments: [], currentAngle: 0 }).segments;
 
   const gradient = `conic-gradient(${segments.map(s => s.segment).join(', ')})`;
 
