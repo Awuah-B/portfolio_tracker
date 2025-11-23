@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-from app.api import portfolios
+from app.api import portfolios, auth
 
 app = FastAPI(title="Portfolio Tracker API")
 
@@ -18,6 +18,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(portfolios.router, prefix="/api")
 
 @app.get("/")

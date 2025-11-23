@@ -4,6 +4,7 @@ from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta
 import yfinance as yf
 from app.utils.set_logs import setup_logger
+from app.services.price_cache import PriceCacheService
 
 logger = setup_logger(__name__)
 
@@ -13,11 +14,43 @@ class MarketDataService:
         self.max_retries = max_retries
         self.base_delay = base_delay
         self.lock = threading.Lock()
+        self.price_cache = PriceCacheService()
+        
+        # In-memory cache with TTL
+        self._memory_cache: Dict[str, Dict] = {}
+        self._current_price_ttl = timedelta(minutes=10)  # 10 min for current prices
+        self._historical_price_ttl = timedelta(hours=24)  # 24 hours for historical
 
+
+    def _get_from_memory_cache(self, key: str, ttl: timedelta) -> Optional[Any]:
+        """Get value from in-memory cache if not expired."""
+        if key in self._memory_cache:
+            entry = self._memory_cache[key]
+            if datetime.now() - entry['timestamp'] < ttl:
+                logger.debug(f"Memory cache HIT: {key}")
+                return entry['data']
+            else:
+                # Expired, remove it
+                del self._memory_cache[key]
+                logger.debug(f"Memory cache EXPIRED: {key}")
+        return None
+    
+    def _set_memory_cache(self, key: str, data: Any):
+        """Store value in in-memory cache."""
+        self._memory_cache[key] = {
+            'data': data,
+            'timestamp': datetime.now()
+        }
+        logger.debug(f"Memory cache SET: {key}")
+    
+    def clear_memory_cache(self):
+        """Clear all in-memory cache entries."""
+        self._memory_cache.clear()
+        logger.info("Memory cache cleared")
 
     def get_current_price(self, ticker: str) -> Optional[float]:
         """
-        Get current price for a ticker
+        Get current price for a ticker with multi-layer caching.
         
         Args:
             ticker: Stock symbol (e.g., 'AAPL', 'BTC-USD')
@@ -25,6 +58,20 @@ class MarketDataService:
         Returns:
             Current price or None if error
         """
+        cache_key = f"current_price:{ticker}"
+        
+        # Layer 1: Check in-memory cache
+        cached_price = self._get_from_memory_cache(cache_key, self._current_price_ttl)
+        if cached_price is not None:
+            return cached_price
+        
+        # Layer 2: Check database cache (today's price)
+        db_price = self.price_cache.get_cached_price(ticker, datetime.now().date())
+        if db_price is not None:
+            self._set_memory_cache(cache_key, db_price)
+            return db_price
+        
+        # Layer 3: Fetch from Yahoo Finance
         for attempt in range(self.max_retries):
             try:
                 time.sleep(self.base_delay * (2 ** attempt))
@@ -34,9 +81,19 @@ class MarketDataService:
                 data = stock.history(period='1d')
 
                 if not data.empty:
-                    current_price = data['Close'].iloc[-1]
+                    current_price = float(data['Close'].iloc[-1])
                     logger.info(f"{ticker}: ${current_price:.2f}")
-                    return float(current_price)
+                    
+                    # Store in both caches
+                    self._set_memory_cache(cache_key, current_price)
+                    self.price_cache.store_price(
+                        ticker, 
+                        datetime.now().date(), 
+                        current_price,
+                        volume=int(data['Volume'].iloc[-1]) if 'Volume' in data else None
+                    )
+                    
+                    return current_price
                 
                 elif attempt == self.max_retries - 1:
                     logger.warning(f"Empty Data for {ticker} after {self.max_retries} attempts")
@@ -45,6 +102,53 @@ class MarketDataService:
                 logger.error(f"Failed to fetch data for {ticker} on attempt {attempt + 1}: {e}")
                 if attempt == self.max_retries - 1:
                     return None
+
+    def get_intraday_prices(self, ticker: str) -> Dict[str, float]:
+        """
+        Get intraday prices (5-minute intervals) for the current day.
+        Uses short-term in-memory caching only.
+        
+        Args:
+            ticker: Stock symbol
+            
+        Returns:
+            Dictionary mapping timestamp strings to closing prices
+        """
+        cache_key = f"intraday:{ticker}"
+        
+        # Check memory cache (1 minute TTL for intraday to keep it fresh)
+        cached_data = self._get_from_memory_cache(cache_key, timedelta(minutes=1))
+        if cached_data:
+            return cached_data
+            
+        for attempt in range(self.max_retries):
+            try:
+                time.sleep(self.base_delay * (2 ** attempt))
+                logger.debug(f"Fetching intraday data for {ticker} (attempt {attempt + 1})")
+
+                stock = yf.Ticker(ticker)
+                # Fetch 1 day of data with 5 minute interval
+                data = stock.history(period='1d', interval='5m')
+
+                if not data.empty:
+                    prices = {}
+                    for date, row in data.iterrows():
+                        # Format as full ISO timestamp
+                        date_str = date.isoformat()
+                        prices[date_str] = float(row['Close'])
+                    
+                    # Cache for 1 minute
+                    self._set_memory_cache(cache_key, prices)
+                    return prices
+                
+                elif attempt == self.max_retries - 1:
+                    logger.warning(f"Empty intraday data for {ticker}")
+                    return {}
+            except Exception as e:
+                logger.error(f"Failed to fetch intraday data for {ticker}: {e}")
+                if attempt == self.max_retries - 1:
+                    return {}
+        return {}
 
     def get_historical_prices(
         self, 
@@ -171,6 +275,59 @@ class MarketDataService:
             # The first entry should be the price for the requested date
             return historical_data[0]['close']
         return None
+
+    def get_historical_prices_series(
+        self, 
+        ticker: str, 
+        start_date: datetime, 
+        end_date: datetime = None
+    ) -> Dict[str, float]:
+        """
+        Get historical prices as a dictionary {date_str: price} for easier lookup.
+        Now with database caching for improved performance.
+        
+        Args:
+            ticker: Stock symbol
+            start_date: Start date
+            end_date: End date (default: today)
+            
+        Returns:
+            Dictionary: {'2023-01-01': 150.0, ...}
+        """
+        if end_date is None:
+            end_date = datetime.now()
+        
+        # Step 1: Check database cache
+        cached_prices = self.price_cache.get_cached_price_range(
+            ticker, 
+            start_date.date(), 
+            end_date.date()
+        )
+        
+        # Step 2: Find missing dates
+        missing_dates = self.price_cache.find_missing_dates(
+            ticker,
+            start_date.date(),
+            end_date.date()
+        )
+        
+        # Step 3: Fetch only missing data from Yahoo Finance
+        if missing_dates and len(missing_dates) > 0:
+            logger.info(f"{ticker}: Fetching {len(missing_dates)} missing dates from Yahoo Finance")
+            
+            # Fetch from Yahoo Finance
+            fresh_prices = self.get_historical_prices(ticker, start_date, end_date)
+            
+            if fresh_prices:
+                # Store in database cache
+                self.price_cache.store_bulk_prices(ticker, fresh_prices)
+                
+                # Add to cached_prices dict
+                for p in fresh_prices:
+                    date_str = p['date'].strftime('%Y-%m-%d')
+                    cached_prices[date_str] = p['close']
+        
+        return cached_prices
 
 if __name__ == "__main__":
     service = MarketDataService()

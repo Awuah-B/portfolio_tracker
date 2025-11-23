@@ -49,6 +49,8 @@ class Config:
                 project_ref=os.getenv("SUPABASE_PROJECT_REF"),
             )
             self.database_url = self._get_required_env("DATABASE_URL")
+            self.admin_password = self._get_required_env("ADMIN_PASSWORD")
+            self.secret_key = self._get_required_env("SECRET_KEY")
 
             self.monitoring = MonitoringConfig()
             self._validate_config()

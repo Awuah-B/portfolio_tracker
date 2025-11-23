@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, String, Numeric, DateTime, Enum, ForeignKey, UniqueConstraint
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, Float, ForeignKey, Enum, Numeric, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from datetime import datetime, timezone
@@ -45,15 +45,14 @@ class Portfolio(Base):
 class Holding(Base):
     __tablename__ = "holdings"
 
-    id = Column(String, primary_key=True)
-    portfolio_id = Column(String, ForeignKey("portfolios.id", ondelete="CASCADE"))
-    ticker = Column(String, nullable=False, index=True)
-    initial_investment = Column(Numeric(20, 2))
-    purchase_date = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    id = Column(String, primary_key=True, index=True)
+    portfolio_id = Column(String, ForeignKey("portfolios.id"))
+    ticker = Column(String, index=True)
+    starting_price = Column(Float, nullable=False) # Renamed from initial_investment
+    purchase_date = Column(DateTime, default=datetime.utcnow)
     asset_type = Column(Enum(AssetType), nullable=False)
-    last_updated = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    last_updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Many holdings -> one portfolio
     portfolio = relationship("Portfolio", back_populates="holdings")
     trades = relationship("Trade", back_populates="holding", cascade="all, delete-orphan")
 

@@ -1,39 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ===== Bloomberg Terminal Theme Variables ===== */
+/* ===== Bloomberg Terminal Theme Variables (Light Mode) ===== */
 :root {
-  color-scheme: dark;
-  
+  color-scheme: light;
+
   /* Backgrounds */
-  --terminal-black: #000000;
-  --terminal-panel: #09090b;
-  --terminal-surface: #18181b;
-  --terminal-elevated: #27272a;
-  
+  --terminal-black: #ffffff;
+  --terminal-panel: #ffffff;
+  --terminal-surface: #f8fafc;
+  /* slate-50 */
+  --terminal-elevated: #f1f5f9;
+  /* slate-100 */
+
   /* Text Hierarchy */
-  --terminal-text: #fafafa;
-  --terminal-text-secondary: #a1a1aa;
-  --terminal-text-muted: #71717a;
-  --terminal-text-dim: #52525b;
-  
+  --terminal-text: #0f172a;
+  /* slate-900 */
+  --terminal-text-secondary: #475569;
+  /* slate-600 */
+  --terminal-text-muted: #64748b;
+  /* slate-500 */
+  --terminal-text-dim: #94a3b8;
+  /* slate-400 */
+
   /* Bloomberg Orange */
   --bloomberg-orange: #f97316;
   --bloomberg-orange-light: #fb923c;
-  --bloomberg-orange-glow: rgba(249, 115, 22, 0.2);
-  
+  --bloomberg-orange-glow: rgba(249, 115, 22, 0.1);
+
   /* Market Colors */
-  --market-up: #22c55e;
-  --market-down: #ef4444;
-  --market-neutral: #71717a;
-  --market-warning: #eab308;
-  
+  --market-up: #16a34a;
+  /* green-600 */
+  --market-down: #dc2626;
+  /* red-600 */
+  --market-neutral: #64748b;
+  --market-warning: #ca8a04;
+
   /* Borders */
-  --border-primary: #27272a;
-  --border-subtle: #1f1f23;
+  --border-primary: #e2e8f0;
+  /* slate-200 */
+  --border-subtle: #f1f5f9;
+  /* slate-100 */
   --border-active: #f97316;
-  
+
   /* Timing */
   --speed-fast: 100ms;
   --speed-normal: 150ms;
@@ -84,18 +96,18 @@ body {
 
 /* ===== Tailwind Component Layer ===== */
 @layer components {
-  
+
   /* Terminal Containers */
   .terminal-card {
     @apply rounded-lg overflow-hidden;
     background: var(--terminal-panel);
     border: 1px solid var(--border-primary);
   }
-  
+
   .terminal-card-hover {
     @apply transition-all duration-150;
   }
-  
+
   .terminal-card-hover:hover {
     border-color: var(--border-active);
   }
@@ -106,12 +118,12 @@ body {
     background: var(--terminal-surface);
     border-bottom: 1px solid var(--border-primary);
   }
-  
+
   .terminal-header-title {
     @apply flex items-center gap-2 text-sm font-semibold;
     color: var(--terminal-text);
   }
-  
+
   .terminal-header-icon {
     color: var(--bloomberg-orange);
   }
@@ -124,17 +136,17 @@ body {
     background: var(--bloomberg-orange);
     color: #000000;
   }
-  
+
   .btn-bloomberg:hover {
     background: var(--bloomberg-orange-light);
   }
-  
+
   .btn-bloomberg:disabled {
     @apply cursor-not-allowed;
     background: var(--terminal-elevated);
     color: var(--terminal-text-dim);
   }
-  
+
   .btn-terminal-secondary {
     @apply inline-flex items-center justify-center gap-2;
     @apply px-4 py-2 text-sm font-medium rounded-md;
@@ -143,12 +155,12 @@ body {
     color: var(--terminal-text-secondary);
     border: 1px solid var(--border-primary);
   }
-  
+
   .btn-terminal-secondary:hover {
     color: var(--terminal-text);
     border-color: var(--terminal-text-muted);
   }
-  
+
   .btn-terminal-text {
     @apply inline-flex items-center justify-center gap-2;
     @apply px-3 py-1.5 text-sm font-medium rounded;
@@ -156,7 +168,7 @@ body {
     background: transparent;
     color: var(--terminal-text-muted);
   }
-  
+
   .btn-terminal-text:hover {
     color: var(--bloomberg-orange);
   }
@@ -170,20 +182,20 @@ body {
     color: var(--terminal-text);
     border: 1px solid var(--border-primary);
   }
-  
+
   .input-bloomberg::placeholder {
     color: var(--terminal-text-dim);
   }
-  
+
   .input-bloomberg:focus {
     border-color: var(--bloomberg-orange);
     box-shadow: 0 0 0 1px var(--bloomberg-orange-glow);
   }
-  
+
   .input-bloomberg:hover:not(:focus) {
     border-color: var(--terminal-text-dim);
   }
-  
+
   /* Select */
   .select-bloomberg {
     @apply w-full appearance-none px-3 py-2.5 pr-8 text-sm rounded-md;
@@ -193,7 +205,7 @@ body {
     color: var(--terminal-text);
     border: 1px solid var(--border-primary);
   }
-  
+
   .select-bloomberg:focus {
     border-color: var(--bloomberg-orange);
     box-shadow: 0 0 0 1px var(--bloomberg-orange-glow);
@@ -204,28 +216,28 @@ body {
     @apply py-2 border-b;
     border-color: var(--border-subtle);
   }
-  
+
   .data-cell:last-child {
     @apply border-b-0;
   }
-  
+
   .data-label {
     @apply text-xs font-semibold uppercase tracking-wider;
     font-size: 10px;
     letter-spacing: 0.08em;
     color: var(--terminal-text-muted);
   }
-  
+
   .data-value {
     @apply text-sm font-medium;
     font-variant-numeric: tabular-nums;
     color: var(--terminal-text);
   }
-  
+
   .data-positive {
     color: var(--market-up) !important;
   }
-  
+
   .data-negative {
     color: var(--market-down) !important;
   }
@@ -234,13 +246,13 @@ body {
   .status-dot-terminal {
     @apply w-1.5 h-1.5 rounded-full;
   }
-  
+
   .status-dot-live {
     background: var(--market-up);
     box-shadow: 0 0 6px var(--market-up);
     animation: terminal-blink 2s ease-in-out infinite;
   }
-  
+
   .status-dot-offline {
     background: var(--terminal-text-dim);
   }
@@ -253,11 +265,11 @@ body {
     background: transparent;
     border: none;
   }
-  
+
   .period-tab:hover {
     color: var(--bloomberg-orange);
   }
-  
+
   .period-tab-active {
     color: var(--bloomberg-orange);
     background: var(--bloomberg-orange-glow);
@@ -268,13 +280,13 @@ body {
     @apply grid grid-cols-4;
     border-top: 1px solid var(--border-primary);
   }
-  
-  .stat-grid > div {
+
+  .stat-grid>div {
     @apply p-4 text-center;
     border-right: 1px solid var(--border-primary);
   }
-  
-  .stat-grid > div:last-child {
+
+  .stat-grid>div:last-child {
     @apply border-r-0;
   }
 
@@ -284,7 +296,7 @@ body {
     background: rgba(0, 0, 0, 0.85);
     backdrop-filter: blur(4px);
   }
-  
+
   .modal-panel-bloomberg {
     @apply w-full max-w-md p-6 rounded-lg;
     background: var(--terminal-panel);
@@ -296,7 +308,7 @@ body {
   .alert-bloomberg {
     @apply flex items-center justify-between p-3 rounded-md text-sm;
   }
-  
+
   .alert-bloomberg-error {
     background: rgba(239, 68, 68, 0.1);
     border: 1px solid rgba(239, 68, 68, 0.25);
@@ -317,7 +329,7 @@ body {
     background: var(--terminal-panel);
     border: 1px solid var(--border-primary);
   }
-  
+
   .empty-state-icon {
     @apply w-16 h-16 mx-auto mb-6 rounded-lg flex items-center justify-center;
     background: var(--terminal-surface);
@@ -327,23 +339,36 @@ body {
 
 /* ===== Animations ===== */
 @keyframes terminal-blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
 }
 
 @keyframes terminal-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes terminal-slide-up {
-  from { 
-    opacity: 0; 
-    transform: translateY(8px); 
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -357,7 +382,7 @@ body {
 
 /* ===== Input Autofill ===== */
 input:-webkit-autofill,
-input:-webkit-autofill:hover, 
+input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
   -webkit-text-fill-color: var(--terminal-text);
   -webkit-box-shadow: 0 0 0px 1000px var(--terminal-surface) inset;
@@ -373,6 +398,7 @@ input:-webkit-autofill:focus {
 
 /* ===== Reduced Motion ===== */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -384,9 +410,20 @@ input:-webkit-autofill:focus {
 
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
-  .hide-mobile { display: none !important; }
+  .hide-mobile {
+    display: none !important;
+  }
 }
 
 @media (min-width: 769px) {
-  .hide-desktop { display: none !important; }
+  .hide-desktop {
+    display: none !important;
+  }
+}
+
+/* ===== Glass Utility ===== */
+.glass {
+  background-color: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }

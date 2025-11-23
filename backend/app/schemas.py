@@ -9,15 +9,21 @@ class AssetInfo(BaseModel):
 
 class HoldingBase(BaseModel):
     ticker: str
-    initial_investment: float
+    starting_price: float # Renamed from initial_investment
     purchase_date: datetime
     asset_type: AssetType
 
 class HoldingCreate(HoldingBase):
     portfolio_id: str
 
+class HoldingCreateRequest(BaseModel): # This will be used for the API input
+    ticker: str
+    starting_price: float
+    purchase_date: datetime
+    asset_type: AssetType
+
 class HoldingUpdate(BaseModel):
-    initial_investment: Optional[float] = None
+    starting_price: Optional[float] = None # Renamed from initial_investment
     purchase_date: Optional[datetime] = None
 
 class HoldingCalculatedResponse(HoldingBase):
@@ -54,3 +60,17 @@ class PortfolioResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class PortfolioHistoryPoint(BaseModel):
+    date: str
+    value: float
+    percentage_change: float
+
+class BenchmarkHistoryPoint(BaseModel):
+    date: str
+    percentage_change: float
+
+class PortfolioHistoryResponse(BaseModel):
+    portfolio_id: str
+    history: List[PortfolioHistoryPoint]
+    benchmark_history: List[BenchmarkHistoryPoint]

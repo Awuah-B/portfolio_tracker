@@ -9,7 +9,7 @@ export type Holding = {
   id: string;
   portfolio_id: string;
   ticker: string;
-  initial_investment: number;
+  starting_price: number;
   purchase_date: string;
   asset_type: string;
   last_updated: string;
