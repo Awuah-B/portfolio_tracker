@@ -31,7 +31,7 @@ const LoginPage: React.FC = () => {
 
             const data = await response.json();
             login(data.access_token);
-            navigate('/');
+            navigate('/admin');
         } catch (err) {
             setError('Invalid credentials. Please try again.');
         }

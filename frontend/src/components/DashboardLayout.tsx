@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, LogOut, RefreshCw, User } from 'lucide-react';
+import { LayoutDashboard, LogOut, RefreshCw, User, Wifi, WifiOff } from 'lucide-react';
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
@@ -10,6 +10,7 @@ interface DashboardLayoutProps {
     onLogout?: () => void;
     selectedPortfolioName?: string;
     onViewFullHoldings?: (() => void) | null;
+    isLive?: boolean;
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({
@@ -19,7 +20,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     lastUpdated,
     onRefresh,
     onLogout,
-    selectedPortfolioName
+    selectedPortfolioName,
+    isLive = false
 }) => {
     return (
         <div className="flex h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden selection:bg-orange-100 selection:text-orange-900">
@@ -77,6 +79,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                     </div>
 
                     <div className="flex items-center space-x-6">
+                        {/* Live Status */}
+                        <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-full border backdrop-blur-md transition-colors duration-300 ${isLive ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' : 'bg-slate-100 border-slate-200 text-slate-400'}`}>
+                            {isLive ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
+                            <span className="text-xs font-bold uppercase tracking-wider">{isLive ? 'Live' : 'Offline'}</span>
+                        </div>
+
                         {/* Last Updated Status */}
                         <div className="flex items-center space-x-3 px-4 py-2 rounded-full bg-slate-900/50 border border-slate-800/50 backdrop-blur-md">
                             <div className="flex items-center space-x-2">

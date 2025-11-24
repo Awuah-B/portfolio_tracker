@@ -1,15 +1,16 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import type { Holding } from '../types/Portfolio';
 import {
-  TrendingUp,
   LayoutDashboard,
   Plus,
   Wallet,
   Briefcase,
-  ArrowUpRight
+  ArrowUpRight,
 } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
 import { usePolling } from '../hooks/usePolling';
+import { useWebSocket } from '../hooks/useWebSocket';
 import PerformanceChart from './PerformanceChart';
 import MetricCard from './MetricCard';
 import DashboardLayout from './DashboardLayout';
@@ -27,7 +28,7 @@ interface Portfolio {
 interface PortfolioSummary {
   total_current_value: number;
   total_percentage_change: number;
-  holdings: any[]; // Using any[] or Holding[] if imported, but to be safe with existing types
+  holdings: Holding[];
 }
 
 const PortfolioOverviewScreen: React.FC = () => {
@@ -37,6 +38,7 @@ const PortfolioOverviewScreen: React.FC = () => {
   const [selectedPortfolioId, setSelectedPortfolioId] = useState<string | null>(null);
   const [summary, setSummary] = useState<PortfolioSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [summaryLoading, setSummaryLoading] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newPortfolioName, setNewPortfolioName] = useState('');
 
@@ -47,6 +49,38 @@ const PortfolioOverviewScreen: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [timeRange, setTimeRange] = useState<'1d' | 'all'>('all');
+
+  // WebSocket connection
+  const { isConnected, lastMessage } = useWebSocket();
+
+  // Handle real-time updates
+  useEffect(() => {
+    if (lastMessage && lastMessage.type === 'price_update') {
+      // For now, we can just trigger a refresh or update local state
+      // To keep it simple and accurate, we'll trigger a refresh if the update is relevant
+      // But to avoid loops, we should be careful.
+      // A better approach for "real-time" is to update the specific holding in state.
+
+      setSummary(prev => {
+        if (!prev) return null;
+        const updatedHoldings = prev.holdings.map(h => {
+          if (h.ticker === lastMessage.ticker) {
+            return { ...h, current_price: lastMessage.price };
+          }
+          return h;
+        });
+
+        // Recalculate total value roughly (or wait for next poll for precision)
+        // Since we don't have quantity in Holding interface (it's implied 1 unit or we need to check backend), 
+        // we'll just update the holdings array for the table to show live prices.
+
+        return {
+          ...prev,
+          holdings: updatedHoldings
+        };
+      });
+    }
+  }, [lastMessage]);
 
   useEffect(() => {
     fetchPortfolios();
@@ -78,14 +112,20 @@ const PortfolioOverviewScreen: React.FC = () => {
   };
 
   const fetchPortfolioSummary = async (id: string) => {
+    setSummaryLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/portfolios/${id}`);
       if (response.ok) {
         const data = await response.json();
         setSummary(data);
+      } else {
+        setSummary(null);
       }
     } catch (error) {
       console.error('Error fetching summary:', error);
+      setSummary(null);
+    } finally {
+      setSummaryLoading(false);
     }
   };
 
@@ -164,6 +204,7 @@ const PortfolioOverviewScreen: React.FC = () => {
       lastUpdated={lastUpdated}
       onRefresh={refreshData}
       onLogout={isAdmin ? logout : undefined}
+      isLive={isConnected}
       sidebarContent={
         <>
           <div className="flex justify-between items-center mb-6">
@@ -246,71 +287,83 @@ const PortfolioOverviewScreen: React.FC = () => {
         </>
       }
     >
-      {selectedPortfolioId && summary ? (
-        <>
-          {/* Header */}
-          <div className="flex justify-between items-end mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900 mb-2">{portfolios.find(p => p.id === selectedPortfolioId)?.name}</h1>
+      {selectedPortfolioId ? (
+        summaryLoading ? (
+          <div className="h-[60vh] flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+          </div>
+        ) : summary ? (
+          <>
+            {/* Header */}
+            <div className="flex justify-between items-end mb-6">
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900 mb-2">{portfolios.find(p => p.id === selectedPortfolioId)?.name}</h1>
+              </div>
+              <button
+                onClick={() => navigate(`/portfolios/${selectedPortfolioId}`)}
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:border-slate-300 transition-all shadow-sm"
+              >
+                <span className="font-medium">Manage Holdings</span>
+                <ArrowUpRight className="w-4 h-4" />
+              </button>
             </div>
+
+            {/* Metrics Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+              <MetricCard
+                title="Total Return"
+                value={summary ? `${summary.total_percentage_change >= 0 ? '+' : ''}${summary.total_percentage_change.toFixed(2)}%` : '...'}
+                trend={summary ? (summary.total_percentage_change >= 0 ? 'up' : 'down') : 'neutral'}
+                delay={100}
+              />
+              <MetricCard
+                title="Total Holdings"
+                value={summary ? summary.holdings.length.toString() : '0'}
+                trend="neutral"
+                delay={200}
+              />
+            </div>
+
+            {/* Chart Section */}
+            <div className="animate-slide-up" style={{ animationDelay: '300ms' }}>
+              <PerformanceChart
+                data={history}
+                benchmarkData={benchmarkHistory}
+                timeRange={timeRange}
+                onTimeRangeChange={setTimeRange}
+              />
+            </div>
+
+            {/* Holdings Table Section */}
+            <div className="animate-slide-up" style={{ animationDelay: '400ms' }}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-slate-900">Top Holdings</h3>
+              </div>
+              <HoldingsTable
+                holdings={summary ? summary.holdings : []}
+                onRefresh={refreshData}
+              />
+            </div>
+          </>
+        ) : (
+          <div className="h-[60vh] flex flex-col items-center justify-center text-slate-500">
+            <p className="mb-4 text-lg">Failed to load portfolio data.</p>
             <button
-              onClick={() => navigate(`/portfolios/${selectedPortfolioId}`)}
-              className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:border-slate-300 transition-all shadow-sm"
+              onClick={refreshData}
+              className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
             >
-              <span className="font-medium">Manage Holdings</span>
-              <ArrowUpRight className="w-4 h-4" />
+              Retry
             </button>
           </div>
-
-          {/* Metrics Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-            <MetricCard
-              title=""
-              value={summary ? `${summary.total_percentage_change >= 0 ? '+' : ''}${summary.total_percentage_change.toFixed(2)}%` : '...'}
-              // @ts-ignore
-              icon={TrendingUp}
-              trend={summary ? (summary.total_percentage_change >= 0 ? 'up' : 'down') : 'neutral'}
-              isPercentage
-              delay={100}
-            />
-            <MetricCard
-              title=""
-              value={summary ? summary.holdings.length.toString() : '0'}
-              // @ts-ignore
-              icon={Briefcase}
-              delay={200}
-            />
-          </div>
-
-          {/* Chart Section */}
-          <div className="animate-slide-up" style={{ animationDelay: '300ms' }}>
-            <PerformanceChart
-              data={history}
-              benchmarkData={benchmarkHistory}
-              timeRange={timeRange}
-              onTimeRangeChange={setTimeRange}
-            />
-          </div>
-
-          {/* Holdings Table Section */}
-          <div className="animate-slide-up" style={{ animationDelay: '400ms' }}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-white">Top Holdings</h3>
-            </div>
-            <HoldingsTable
-              holdings={summary ? summary.holdings : []}
-              onRefresh={refreshData}
-            />
-          </div>
-        </>
+        )
       ) : (
         <div className="h-[60vh] flex flex-col items-center justify-center text-slate-500">
-          <div className="w-24 h-24 bg-slate-800/50 rounded-full flex items-center justify-center mb-6 shadow-xl shadow-black/20">
-            <LayoutDashboard className="w-10 h-10 text-slate-600" />
+          <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mb-6 shadow-xl shadow-black/5">
+            <LayoutDashboard className="w-10 h-10 text-slate-400" />
           </div>
-          <h3 className="text-xl font-bold text-slate-300 mb-2">Welcome to Portfolio Tracker</h3>
-          <p className="text-slate-500 max-w-md text-center">
+          <h3 className="text-xl font-bold text-slate-700 mb-2">Welcome to Portfolio Tracker</h3>
+          <p className="text-slate-400 max-w-md text-center">
             Select a portfolio from the sidebar to view detailed performance metrics.
           </p>
         </div>

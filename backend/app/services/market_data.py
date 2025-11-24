@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 import yfinance as yf
 from app.utils.set_logs import setup_logger
 from app.services.price_cache import PriceCacheService
+import asyncio
+from app.services.websocket_manager import manager
 
 logger = setup_logger(__name__)
 
@@ -93,6 +95,19 @@ class MarketDataService:
                         volume=int(data['Volume'].iloc[-1]) if 'Volume' in data else None
                     )
                     
+                    # Broadcast update via WebSocket
+                    try:
+                        loop = asyncio.get_running_loop()
+                        message = {
+                            "type": "price_update",
+                            "ticker": ticker,
+                            "price": current_price,
+                            "timestamp": datetime.now().isoformat()
+                        }
+                        loop.create_task(manager.broadcast(message))
+                    except RuntimeError:
+                        pass # No running loop (e.g. running as script)
+
                     return current_price
                 
                 elif attempt == self.max_retries - 1:

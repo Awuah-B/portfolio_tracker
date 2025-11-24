@@ -2,7 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.models.database import get_db, Holding, Portfolio, AssetType
 from app.models.database import get_db, Holding, Portfolio, AssetType
-from app.services.portfolio import compute_portfolio_summary, get_portfolio_history
+from app.services.portfolio import (
+    compute_portfolio_summary, 
+    get_portfolio_history as service_get_portfolio_history,
+    get_portfolio_intraday_history as service_get_portfolio_intraday_history
+)
 from app.services.market_data import MarketDataService
 from app import schemas
 import uuid
@@ -51,9 +55,9 @@ async def get_portfolio_history(
     holdings = db.query(Holding).filter(Holding.portfolio_id == portfolio_id).all()
     
     if period == "1d":
-        history = portfolio_service.get_portfolio_intraday_history(holdings, market_data_service)
+        history = service_get_portfolio_intraday_history(holdings, market_data_service)
     else:
-        history = portfolio_service.get_portfolio_history(holdings, market_data_service)
+        history = service_get_portfolio_history(holdings, market_data_service)
     return schemas.PortfolioHistoryResponse(**history)
 
 @router.delete("/portfolios/{portfolio_id}", status_code=status.HTTP_204_NO_CONTENT)
