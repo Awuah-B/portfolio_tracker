@@ -1,7 +1,0 @@
-{
-    "aptPackages": [
-        "postgresql-client",
-        "libpq-dev"
-    ],
-    "install": "pip install -r requirements.txt"
-}
