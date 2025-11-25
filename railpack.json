@@ -1,0 +1,6 @@
+{
+    "aptPackages": [
+        "postgresql-client",
+        "libpq-dev"
+    ]
+}
