@@ -18,93 +18,88 @@ def compute_portfolio_summary(holdings: List[Holding], market_data_service: Mark
     Returns:
         Dict matching the schemas.PortfolioSummaryResponse structure.
     """
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    
+    if not holdings:
+        return {
+            "portfolio_id": "",
+            "total_current_value": 0.0,
+            "total_percentage_change": 0.0,
+            "holdings": [],
+            "allocation": [],
+        }
+    
     total_current_value = 0.0
     total_initial_investment = 0.0
     
     calculated_holdings: List[schemas.HoldingCalculatedResponse] = []
     allocation_map: Dict[str, Dict[str, Any]] = {}
-
-    for holding in holdings:
-        current_price = market_data_service.get_current_price(holding.ticker)
+    
+    # OPTIMIZATION: Batch fetch all current prices in parallel
+    tickers = [h.ticker for h in holdings]
+    current_prices = market_data_service.get_multiple_prices(tickers)
+    
+    # OPTIMIZATION: Fetch purchase prices and asset names in parallel
+    def fetch_holding_data(holding):
+        """Fetch all data needed for a single holding in parallel"""
+        ticker = holding.ticker
+        current_price = current_prices.get(ticker)
+        
+        # Fetch purchase price
+        initial_price = market_data_service.get_price_at_date(holding.ticker, holding.purchase_date)
+        
+        # Fetch asset name
+        asset_name = market_data_service.get_asset_name(ticker)
+        
+        return {
+            'holding': holding,
+            'current_price': current_price,
+            'initial_price': initial_price,
+            'asset_name': asset_name
+        }
+    
+    # Execute all data fetches in parallel using thread pool
+    holding_data_list = []
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = {executor.submit(fetch_holding_data, h): h for h in holdings}
+        for future in as_completed(futures):
+            try:
+                holding_data_list.append(future.result())
+            except Exception as e:
+                holding = futures[future]
+                logger.error(f"Error fetching data for {holding.ticker}: {e}")
+                # Add fallback data
+                holding_data_list.append({
+                    'holding': holding,
+                    'current_price': None,
+                    'initial_price': None,
+                    'asset_name': holding.ticker
+                })
+    
+    # Process holding data (now all fetches are complete)
+    for data in holding_data_list:
+        holding = data['holding']
+        current_price = data['current_price']
+        initial_price_per_unit = data['initial_price']
+        asset_name = data['asset_name']
         
         if current_price is None:
             # If current_price cannot be fetched, we cannot calculate percentage change accurately.
             # For now, we'll skip this holding or set percentage_change to 0.
             # A more robust solution would involve logging, error handling, or using a fallback price.
             percentage_change = 0.0
-            current_value = float(holding.initial_investment) # Assume no change if no current price
+            current_value = float(holding.starting_price) # Assume no change if no current price
+        elif initial_price_per_unit is None or initial_price_per_unit == 0:
+            percentage_change = 0.0
+            current_value = float(holding.starting_price) # Use starting_price
         else:
-            # Assuming initial_investment is the total value at purchase date
-            # To calculate percentage change, we need the price at purchase date.
-            # For simplicity, let's assume initial_investment is the base for percentage change.
-            # This implies we need to fetch historical price at purchase_date.
-            # For now, let's assume initial_investment is the total value, and current_price is per unit.
-            # This logic needs refinement based on how initial_investment is truly defined.
-            # For the purpose of this refactor, let's assume initial_investment is the total value.
-            # And we need to calculate current_value based on current_price and some implied quantity.
-            # This is where the model becomes ambiguous without quantity.
-
-            # Let's re-evaluate the model:
-            # If we only track initial_investment and purchase_date, and current_price is per unit,
-            # we need to know the 'number of units' to get current_value.
-            # The request was "Remove quantity from table schema and all associated logic base we want to track only percentage change of assest value from the time of addition to portfolio."
-            # This implies initial_investment IS the total value.
-            # So, current_value should be derived from initial_investment and percentage_change.
-            # But percentage_change itself needs current_value. This is a circular dependency.
-
-            # Let's assume the backend will provide `current_value` or `percentage_change` directly,
-            # or we need to fetch historical price at `purchase_date` to calculate `initial_value_at_purchase_date`.
-
-            # For now, let's assume `initial_investment` is the total value invested.
-            # And `current_price` is the current price per unit.
-            # This means we need to know the 'number of units' to calculate current_value.
-            # This contradicts "Remove quantity".
-
-            # Let's assume `initial_investment` is the total value of the holding at purchase.
-            # And `current_price` is the current price of ONE unit.
-            # This means we need to know the number of units to calculate the current total value.
-
-            # Re-reading the request: "track only percentage change of assest value from the time of addition to portfolio."
-            # This means we need:
-            # 1. Initial total value (initial_investment)
-            # 2. Current total value (which we need to calculate)
-
-            # To calculate current total value, we need current price and initial price.
-            # If initial_investment is the total value, then we need to know the initial price per unit
-            # and the current price per unit to calculate the percentage change.
-
-            # Let's assume `initial_investment` is the total amount invested.
-            # And `current_price` is the current price of the asset (e.g., stock price).
-            # To calculate the current value of the holding, we need to know how many units were bought.
-            # This brings back `quantity`.
-
-            # This is a critical point of ambiguity.
-            # If `quantity` is removed, how do we calculate `current_value` from `current_price`?
-            # The only way is if `initial_investment` is the total value, and we track `percentage_change` directly.
-            # But `percentage_change` is a derived value.
-
-            # Let's assume the `initial_investment` is the total value of the asset at the time of purchase.
-            # And `current_price` is the current price of the asset.
-            # We need to get the price of the asset at `purchase_date`.
-
-            # This requires a new function in MarketDataService: `get_price_at_date(ticker, date)`.
-            # For now, I will implement a placeholder for `get_price_at_date` in `MarketDataService`.
-
-            initial_price_per_unit = market_data_service.get_price_at_date(holding.ticker, holding.purchase_date)
-            logger.debug(f"Type of holding.purchase_date: {type(holding.purchase_date)}, Value: {holding.purchase_date}")
-
-            if initial_price_per_unit is None or initial_price_per_unit == 0:
-                percentage_change = 0.0
-                current_value = float(holding.starting_price) # Use starting_price
-            else:
-                percentage_change = ((current_price - initial_price_per_unit) / initial_price_per_unit) * 100
-                current_value = float(holding.starting_price) * (1 + percentage_change / 100) # Use starting_price
+            percentage_change = ((current_price - initial_price_per_unit) / initial_price_per_unit) * 100
+            current_value = float(holding.starting_price) * (1 + percentage_change / 100) # Use starting_price
 
         total_current_value += current_value
         total_initial_investment += float(holding.starting_price)
 
         # Get asset info for frontend display
-        asset_name = market_data_service.get_asset_name(holding.ticker)
         asset_type_str = holding.asset_type.value # Convert Enum to string
 
         calculated_holdings.append(
@@ -152,12 +147,14 @@ def get_portfolio_history(holdings: List[Holding], market_data_service: MarketDa
     1. Find the earliest purchase date across all holdings.
     2. Create a date range from earliest date to today.
     3. For each holding:
-       a. Fetch historical prices from its purchase date.
+       a. Fetch historical prices from its purchase date (IN PARALLEL).
        b. Calculate daily value: Value_t = Starting_Price * (Price_t / Price_purchase)
        c. Add to daily totals.
     4. Fetch S&P 500 benchmark data for the same period
     5. Calculate percentage changes for both portfolio and benchmark
     """
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    
     if not holdings:
         return {"portfolio_id": "", "history": [], "benchmark_history": []}
         
@@ -167,22 +164,41 @@ def get_portfolio_history(holdings: List[Holding], market_data_service: MarketDa
     start_date = earliest_date
     end_date = datetime.now()
     
-    # 2. Fetch history for all holdings
-    holding_histories = {}
-    
-    for holding in holdings:
+    # 2. OPTIMIZATION: Fetch history for all holdings IN PARALLEL
+    def fetch_holding_history(holding):
+        """Fetch historical prices for a single holding"""
         h_start = holding.purchase_date
         prices = market_data_service.get_historical_prices_series(holding.ticker, h_start, end_date)
         
-        holding_histories[holding.id] = {
-            "prices": prices,
-            "base_price": None
-        }
-        
         # Find base price (first available price on or after purchase date)
+        base_price = None
         sorted_dates = sorted(prices.keys())
         if sorted_dates:
-            holding_histories[holding.id]["base_price"] = prices[sorted_dates[0]]
+            base_price = prices[sorted_dates[0]]
+            
+        return {
+            'holding_id': holding.id,
+            'prices': prices,
+            'base_price': base_price
+        }
+    
+    holding_histories = {}
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = {executor.submit(fetch_holding_history, h): h for h in holdings}
+        for future in as_completed(futures):
+            try:
+                result = future.result()
+                holding_histories[result['holding_id']] = {
+                    "prices": result['prices'],
+                    "base_price": result['base_price']
+                }
+            except Exception as e:
+                holding = futures[future]
+                logger.error(f"Error fetching history for {holding.ticker}: {e}")
+                holding_histories[holding.id] = {
+                    "prices": {},
+                    "base_price": None
+                }
             
     # 3. Aggregate daily values
     delta = end_date - start_date
@@ -228,7 +244,7 @@ def get_portfolio_history(holdings: List[Holding], market_data_service: MarketDa
                 "percentage_change": round(pct_change, 2)
             })
     
-    # 4. Fetch S&P 500 benchmark data
+    # 4. Fetch S&P 500 benchmark data (this could also be parallelized if needed)
     benchmark_service = BenchmarkService()
     sp500_prices = benchmark_service.get_sp500_history(start_date, end_date)
     
