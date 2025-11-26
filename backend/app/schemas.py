@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime
-from app.models.database import AssetType
+from app.models.database import AssetType, TradeType
 
 class AssetInfo(BaseModel):
     name: str
@@ -12,6 +12,7 @@ class HoldingBase(BaseModel):
     starting_price: float # Renamed from initial_investment
     purchase_date: datetime
     asset_type: AssetType
+    trade_type: TradeType = TradeType.BUY
 
 class HoldingCreate(HoldingBase):
     portfolio_id: str
@@ -21,6 +22,7 @@ class HoldingCreateRequest(BaseModel): # This will be used for the API input
     starting_price: float
     purchase_date: datetime
     asset_type: AssetType
+    trade_type: TradeType = TradeType.BUY
 
 class HoldingUpdate(BaseModel):
     starting_price: Optional[float] = None # Renamed from initial_investment
@@ -33,6 +35,7 @@ class HoldingCalculatedResponse(HoldingBase):
     last_updated: datetime
     percentage_change: float
     asset_info: Optional[AssetInfo] = None
+    trade_type: TradeType = TradeType.BUY
 
     class Config:
         from_attributes = True
