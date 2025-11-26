@@ -120,7 +120,7 @@ async def add_holding_to_portfolio(
         last_updated=db_holding.last_updated,
         current_price=current_price,
         percentage_change=0.0, # Placeholder, will be calculated in summary
-        trade_type=db_holding.trade_type.value  # Add trade_type to response
+        trade_type=db_holding.trade_type.value if db_holding.trade_type else "buy"  # Default to 'buy' if None
     )
 
 @router.put("/holdings/{holding_id}", response_model=schemas.HoldingCalculatedResponse)
