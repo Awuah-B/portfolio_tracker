@@ -1,115 +1,430 @@
 {
   "crypto_tickers": [
-    {"ticker": "BTC-USD", "name": "Bitcoin"},
-    {"ticker": "ETH-USD", "name": "Ethereum"},
-    {"ticker": "SOL1-USD", "name": "Solana"},
-    {"ticker": "ADA-USD", "name": "Cardano"},
-    {"ticker": "XRP-USD", "name": "XRP"},
-    {"ticker": "DOT1-USD", "name": "Polkadot"},
-    {"ticker": "LUNA1-USD", "name": "Terra"},
-    {"ticker": "DOGE-USD", "name": "Dogecoin"},
-    {"ticker": "AVAX-USD", "name": "Avalanche"},
-    {"ticker": "SHIB-USD", "name": "Shiba Inu"},
-    {"ticker": "ALGO-USD", "name": "Algorand"},
-    {"ticker": "LTC-USD", "name": "Litecoin"},
-    {"ticker": "UNI3-USD", "name": "Uniswap"},
-    {"ticker": "BCH-USD", "name": "Bitcoin Cash"},
-    {"ticker": "XLM-USD", "name": "Stellar"},
-    {"ticker": "TRX-USD", "name": "Tron"},
-    {"ticker": "TON-USD", "name": "Toncoin"},
-    {"ticker": "BNB-USD", "name": "Binance Coin"},
-    {"ticker": "TCAP-USD", "name": "TCAP"},
-    {"ticker": "U USDT-USD", "name": "Tether"}
+    {
+      "ticker": "BTC-USD",
+      "name": "Bitcoin"
+    },
+    {
+      "ticker": "ETH-USD",
+      "name": "Ethereum"
+    },
+    {
+      "ticker": "SOL1-USD",
+      "name": "Solana"
+    },
+    {
+      "ticker": "ADA-USD",
+      "name": "Cardano"
+    },
+    {
+      "ticker": "XRP-USD",
+      "name": "XRP"
+    },
+    {
+      "ticker": "DOT1-USD",
+      "name": "Polkadot"
+    },
+    {
+      "ticker": "LUNA1-USD",
+      "name": "Terra"
+    },
+    {
+      "ticker": "DOGE-USD",
+      "name": "Dogecoin"
+    },
+    {
+      "ticker": "AVAX-USD",
+      "name": "Avalanche"
+    },
+    {
+      "ticker": "SHIB-USD",
+      "name": "Shiba Inu"
+    },
+    {
+      "ticker": "ALGO-USD",
+      "name": "Algorand"
+    },
+    {
+      "ticker": "LTC-USD",
+      "name": "Litecoin"
+    },
+    {
+      "ticker": "UNI3-USD",
+      "name": "Uniswap"
+    },
+    {
+      "ticker": "BCH-USD",
+      "name": "Bitcoin Cash"
+    },
+    {
+      "ticker": "XLM-USD",
+      "name": "Stellar"
+    },
+    {
+      "ticker": "TRX-USD",
+      "name": "Tron"
+    },
+    {
+      "ticker": "TON-USD",
+      "name": "Toncoin"
+    },
+    {
+      "ticker": "BNB-USD",
+      "name": "Binance Coin"
+    },
+    {
+      "ticker": "TCAP-USD",
+      "name": "TCAP"
+    },
+    {
+      "ticker": "U USDT-USD",
+      "name": "Tether"
+    }
   ],
   "indices_tickers": [
-    {"ticker": "^DJI", "name": "Dow Jones Industrial Average"},
-    {"ticker": "^GSPC", "name": "S&P 500"},
-    {"ticker": "^IXIC", "name": "NASDAQ Composite"},
-    {"ticker": "^VIX", "name": "CBOE Volatility Index"},
-    {"ticker": "^HSI", "name": "Hang Seng Index"},
-    {"ticker": "^N225", "name": "Nikkei 225"},
-    {"ticker": "DX-Y.NYB", "name": "U.S. Dollar Index"}
+    {
+      "ticker": "^DJI",
+      "name": "Dow Jones Industrial Average"
+    },
+    {
+      "ticker": "^GSPC",
+      "name": "S&P 500"
+    },
+    {
+      "ticker": "^IXIC",
+      "name": "NASDAQ Composite"
+    },
+    {
+      "ticker": "^VIX",
+      "name": "CBOE Volatility Index"
+    },
+    {
+      "ticker": "^HSI",
+      "name": "Hang Seng Index"
+    },
+    {
+      "ticker": "^N225",
+      "name": "Nikkei 225"
+    },
+    {
+      "ticker": "DX-Y.NYB",
+      "name": "U.S. Dollar Index"
+    }
   ],
   "forex_tickers": [
-    {"ticker": "EURUSD=X", "name": "EUR/USD"},
-    {"ticker": "JPY=X", "name": "USD/JPY"},
-    {"ticker": "GBPUSD=X", "name": "GBP/USD"},
-    {"ticker": "EURJPY=X", "name": "EUR/JPY"}
+    {
+      "ticker": "EURUSD=X",
+      "name": "EUR/USD"
+    },
+    {
+      "ticker": "JPY=X",
+      "name": "USD/JPY"
+    },
+    {
+      "ticker": "GBPUSD=X",
+      "name": "GBP/USD"
+    },
+    {
+      "ticker": "EURJPY=X",
+      "name": "EUR/JPY"
+    }
   ],
   "stocks_tickers": [
-    {"ticker": "AAPL", "name": "Apple Inc."},
-    {"ticker": "MSFT", "name": "Microsoft Corp."},
-    {"ticker": "GOOGL", "name": "Alphabet Inc. (Class A)"},
-    {"ticker": "AMZN", "name": "Amazon.com Inc."},
-    {"ticker": "TSLA", "name": "Tesla Inc."},
-    {"ticker": "META", "name": "Meta Platforms Inc."},
-    {"ticker": "NVDA", "name": "NVIDIA Corp."},
-    {"ticker": "NFLX", "name": "Netflix Inc."},
-    {"ticker": "AMD", "name": "Advanced Micro Devices Inc."},
-    {"ticker": "INTC", "name": "Intel Corp."},
-    {"ticker": "CRM", "name": "Salesforce Inc."},
-    {"ticker": "ADBE", "name": "Adobe Inc."},
-    {"ticker": "PYPL", "name": "PayPal Holdings Inc."},
-    {"ticker": "UBER", "name": "Uber Technologies Inc."},
-    {"ticker": "LYFT", "name": "Lyft Inc."},
-    {"ticker": "ZM", "name": "Zoom Video Communications Inc."},
-    {"ticker": "SQ", "name": "Block Inc."},
-    {"ticker": "ROKU", "name": "Roku Inc."},
-    {"ticker": "SPOT", "name": "Spotify Technology S.A."},
-    {"ticker": "TWTR", "name": "Twitter Inc. (Historical)"},
-    {"ticker": "BABA", "name": "Alibaba Group Holding Ltd."},
-    {"ticker": "JD", "name": "JD.com Inc."},
-    {"ticker": "PDD", "name": "PDD Holdings Inc."},
-    {"ticker": "NIO", "name": "NIO Inc."},
-    {"ticker": "XPEV", "name": "XPeng Inc."},
-    {"ticker": "LI", "name": "Li Auto Inc."},
-    {"ticker": "BIDU", "name": "Baidu Inc."},
-    {"ticker": "TME", "name": "Tencent Music Entertainment Group"},
-    {"ticker": "VIPS", "name": "Vipshop Holdings Ltd."},
-    {"ticker": "YMM", "name": "Full Truck Alliance Co. Ltd."},
-    {"ticker": "JPM", "name": "JPMorgan Chase & Co."},
-    {"ticker": "BAC", "name": "Bank of America Corp."},
-    {"ticker": "WFC", "name": "Wells Fargo & Co."},
-    {"ticker": "GS", "name": "Goldman Sachs Group Inc."},
-    {"ticker": "MS", "name": "Morgan Stanley"},
-    {"ticker": "C", "name": "Citigroup Inc."},
-    {"ticker": "USB", "name": "U.S. Bancorp"},
-    {"ticker": "PNC", "name": "PNC Financial Services Group Inc."},
-    {"ticker": "TFC", "name": "Truist Financial Corp."},
-    {"ticker": "COF", "name": "Capital One Financial Corp."}
+    {
+      "ticker": "AAPL",
+      "name": "Apple Inc."
+    },
+    {
+      "ticker": "MSFT",
+      "name": "Microsoft Corp."
+    },
+    {
+      "ticker": "GOOGL",
+      "name": "Alphabet Inc. (Class A)"
+    },
+    {
+      "ticker": "AMZN",
+      "name": "Amazon.com Inc."
+    },
+    {
+      "ticker": "TSLA",
+      "name": "Tesla Inc."
+    },
+    {
+      "ticker": "META",
+      "name": "Meta Platforms Inc."
+    },
+    {
+      "ticker": "NVDA",
+      "name": "NVIDIA Corp."
+    },
+    {
+      "ticker": "NFLX",
+      "name": "Netflix Inc."
+    },
+    {
+      "ticker": "AMD",
+      "name": "Advanced Micro Devices Inc."
+    },
+    {
+      "ticker": "INTC",
+      "name": "Intel Corp."
+    },
+    {
+      "ticker": "CRM",
+      "name": "Salesforce Inc."
+    },
+    {
+      "ticker": "ADBE",
+      "name": "Adobe Inc."
+    },
+    {
+      "ticker": "PYPL",
+      "name": "PayPal Holdings Inc."
+    },
+    {
+      "ticker": "UBER",
+      "name": "Uber Technologies Inc."
+    },
+    {
+      "ticker": "LYFT",
+      "name": "Lyft Inc."
+    },
+    {
+      "ticker": "ZM",
+      "name": "Zoom Video Communications Inc."
+    },
+    {
+      "ticker": "SQ",
+      "name": "Block Inc."
+    },
+    {
+      "ticker": "ROKU",
+      "name": "Roku Inc."
+    },
+    {
+      "ticker": "SPOT",
+      "name": "Spotify Technology S.A."
+    },
+    {
+      "ticker": "TWTR",
+      "name": "Twitter Inc. (Historical)"
+    },
+    {
+      "ticker": "BABA",
+      "name": "Alibaba Group Holding Ltd."
+    },
+    {
+      "ticker": "JD",
+      "name": "JD.com Inc."
+    },
+    {
+      "ticker": "PDD",
+      "name": "PDD Holdings Inc."
+    },
+    {
+      "ticker": "NIO",
+      "name": "NIO Inc."
+    },
+    {
+      "ticker": "XPEV",
+      "name": "XPeng Inc."
+    },
+    {
+      "ticker": "LI",
+      "name": "Li Auto Inc."
+    },
+    {
+      "ticker": "BIDU",
+      "name": "Baidu Inc."
+    },
+    {
+      "ticker": "TME",
+      "name": "Tencent Music Entertainment Group"
+    },
+    {
+      "ticker": "VIPS",
+      "name": "Vipshop Holdings Ltd."
+    },
+    {
+      "ticker": "YMM",
+      "name": "Full Truck Alliance Co. Ltd."
+    },
+    {
+      "ticker": "JPM",
+      "name": "JPMorgan Chase & Co."
+    },
+    {
+      "ticker": "BAC",
+      "name": "Bank of America Corp."
+    },
+    {
+      "ticker": "WFC",
+      "name": "Wells Fargo & Co."
+    },
+    {
+      "ticker": "GS",
+      "name": "Goldman Sachs Group Inc."
+    },
+    {
+      "ticker": "MS",
+      "name": "Morgan Stanley"
+    },
+    {
+      "ticker": "C",
+      "name": "Citigroup Inc."
+    },
+    {
+      "ticker": "USB",
+      "name": "U.S. Bancorp"
+    },
+    {
+      "ticker": "PNC",
+      "name": "PNC Financial Services Group Inc."
+    },
+    {
+      "ticker": "TFC",
+      "name": "Truist Financial Corp."
+    },
+    {
+      "ticker": "COF",
+      "name": "Capital One Financial Corp."
+    },
+    {
+      "ticker": "LAC",
+      "name": "Lithium Americas Corp."
+    },
+    {
+      "ticker": "GEVO",
+      "name": "Gevo, Inc."
+    },
+    {
+      "ticker": "PLUG",
+      "name": "PlugPower."
+    }
   ],
   "commodities_tickers": [
-    {"ticker": "GC=F", "name": "Gold Futures"},
-    {"ticker": "SI=F", "name": "Silver Futures"},
-    {"ticker": "ZN=F", "name": "Zinc Futures"},
-    {"ticker": "ZS=F", "name": "Soybean Futures"}
+    {
+      "ticker": "GC=F",
+      "name": "Gold Futures"
+    },
+    {
+      "ticker": "SI=F",
+      "name": "Silver Futures"
+    },
+    {
+      "ticker": "ZN=F",
+      "name": "Zinc Futures"
+    },
+    {
+      "ticker": "ZS=F",
+      "name": "Soybean Futures"
+    }
   ],
   "etfs_tickers": [
-    {"ticker": "SPY", "name": "SPDR S&P 500 ETF Trust"},
-    {"ticker": "IVV", "name": "iShares Core S&P 500 ETF"},
-    {"ticker": "VOO", "name": "Vanguard S&P 500 ETF"},
-    {"ticker": "QQQ", "name": "Invesco QQQ Trust"},
-    {"ticker": "DIA", "name": "SPDR Dow Jones Industrial Average ETF Trust"},
-    {"ticker": "VTI", "name": "Vanguard Total Stock Market ETF"},
-    {"ticker": "EEM", "name": "iShares MSCI Emerging Markets ETF"},
-    {"ticker": "GLD", "name": "SPDR Gold Shares"},
-    {"ticker": "SLV", "name": "iShares Silver Trust"},
-    {"ticker": "USO", "name": "United States Oil Fund LP"},
-    {"ticker": "IAU", "name": "iShares Gold Trust"},
-    {"ticker": "AAAU", "name": "Perth Mint Physical Gold ETF"},
-    {"ticker": "GLDM", "name": "SPDR Gold MiniShares Trust"},
-    {"ticker": "SGOL", "name": "Aberdeen Standard Physical Gold Shares ETF"},
-    {"ticker": "OUNZ", "name": "VanEck Merk Gold Trust"}
+    {
+      "ticker": "SPY",
+      "name": "SPDR S&P 500 ETF Trust"
+    },
+    {
+      "ticker": "IVV",
+      "name": "iShares Core S&P 500 ETF"
+    },
+    {
+      "ticker": "VOO",
+      "name": "Vanguard S&P 500 ETF"
+    },
+    {
+      "ticker": "QQQ",
+      "name": "Invesco QQQ Trust"
+    },
+    {
+      "ticker": "DIA",
+      "name": "SPDR Dow Jones Industrial Average ETF Trust"
+    },
+    {
+      "ticker": "VTI",
+      "name": "Vanguard Total Stock Market ETF"
+    },
+    {
+      "ticker": "EEM",
+      "name": "iShares MSCI Emerging Markets ETF"
+    },
+    {
+      "ticker": "GLD",
+      "name": "SPDR Gold Shares"
+    },
+    {
+      "ticker": "SLV",
+      "name": "iShares Silver Trust"
+    },
+    {
+      "ticker": "USO",
+      "name": "United States Oil Fund LP"
+    },
+    {
+      "ticker": "IAU",
+      "name": "iShares Gold Trust"
+    },
+    {
+      "ticker": "AAAU",
+      "name": "Perth Mint Physical Gold ETF"
+    },
+    {
+      "ticker": "GLDM",
+      "name": "SPDR Gold MiniShares Trust"
+    },
+    {
+      "ticker": "SGOL",
+      "name": "Aberdeen Standard Physical Gold Shares ETF"
+    },
+    {
+      "ticker": "OUNZ",
+      "name": "VanEck Merk Gold Trust"
+    },
+    {
+      "ticker": "GDX",
+      "name": "VanEck Gold Miners ETF"
+    }
   ],
   "bond_interests_tickers": [
-    {"ticker": "^FVX", "name": "5-Year T-Note Yield"},
-    {"ticker": "^TNX", "name": "10-Year T-Note Yield"},
-    {"ticker": "^TYX", "name": "30-Year T-Bond Yield"},
-    {"ticker": "^IRX", "name": "13-Week T-Bill Yield"}
+    {
+      "ticker": "^FVX",
+      "name": "5-Year T-Note Yield"
+    },
+    {
+      "ticker": "^TNX",
+      "name": "10-Year T-Note Yield"
+    },
+    {
+      "ticker": "^TYX",
+      "name": "30-Year T-Bond Yield"
+    },
+    {
+      "ticker": "^IRX",
+      "name": "13-Week T-Bill Yield"
+    }
   ],
   "miners_tickers": [
-    {"ticker": "GDX", "name": "VanEck Gold Miners ETF"},
-    {"ticker": "RING", "name": "iShares MSCI Global Gold Miners ETF"},
-    {"ticker": "GDXJ", "name": "VanEck Junior Gold Miners ETF"}
+    {
+      "ticker": "GDX",
+      "name": "VanEck Gold Miners ETF"
+    },
+    {
+      "ticker": "RING",
+      "name": "iShares MSCI Global Gold Miners ETF"
+    },
+    {
+      "ticker": "GDXJ",
+      "name": "VanEck Junior Gold Miners ETF"
+    },
+    {
+      "ticker": "ETHE",
+      "name": "Grayscale Ethereum Trust"
+    },
+    {
+      "ticker": "GBTC",
+      "name": "Grayscale Bitcoin Trust"
+    }
   ]
 }
