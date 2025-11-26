@@ -22,5 +22,8 @@ COPY . .
 # Set environment variables
 ENV PYTHONPATH=/app
 
-# Command to run the application
-CMD sh -c "python -m uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT"
+# Set Python path to include backend directory so 'app' module can be found
+ENV PYTHONPATH=/app/backend
+
+# Run the application
+CMD ["sh", "-c", "python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
