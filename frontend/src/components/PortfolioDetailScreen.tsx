@@ -58,6 +58,7 @@ const PortfolioDetailScreen: React.FC = () => {
   const [startingPrice, setStartingPrice] = useState<number | ''>('');
   const [purchaseDate, setPurchaseDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [isFetchingPrice, setIsFetchingPrice] = useState(false);
+  const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy');
 
   // Fetch all portfolios for sidebar
   useEffect(() => {
@@ -128,6 +129,7 @@ const PortfolioDetailScreen: React.FC = () => {
         ticker: selectedTicker,
         starting_price: startingPrice,
         purchase_date: `${purchaseDate}T00:00:00`,
+        trade_type: tradeType,
         asset_type: ({
           'crypto_tickers': 'crypto',
           'stocks_tickers': 'stock',
@@ -146,6 +148,7 @@ const PortfolioDetailScreen: React.FC = () => {
       setSelectedTicker('');
       setStartingPrice('');
       setPurchaseDate('');
+      setTradeType('buy');
       setError(null);
       fetchPortfolioDetails();
     } catch (err: unknown) {
@@ -191,7 +194,8 @@ const PortfolioDetailScreen: React.FC = () => {
 
   useEffect(() => {
     fetchPortfolioDetails();
-  }, [portfolioId, fetchPortfolioDetails]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [portfolioId]);
 
   if (loading && !portfolio) {
     return (
@@ -362,6 +366,38 @@ const PortfolioDetailScreen: React.FC = () => {
             </div>
 
             <div className="space-y-4">
+              {/* Trade Type Selection */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Transaction Type</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="tradeType"
+                      value="buy"
+                      checked={tradeType === 'buy'}
+                      onChange={(e) => setTradeType(e.target.value as 'buy' | 'sell')}
+                      className="w-4 h-4 text-emerald-500 bg-slate-950 border-slate-700 focus:ring-emerald-500 focus:ring-2"
+                    />
+                    <span className="text-white font-medium">Buy</span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="tradeType"
+                      value="sell"
+                      checked={tradeType === 'sell'}
+                      onChange={(e) => setTradeType(e.target.value as 'buy' | 'sell')}
+                      className="w-4 h-4 text-rose-500 bg-slate-950 border-slate-700 focus:ring-rose-500 focus:ring-2"
+                    />
+                    <span className="text-white font-medium">Sell</span>
+                  </label>
+                </div>
+                {tradeType === 'sell' && (
+                  <p className="mt-2 text-xs text-slate-400">ℹ️ Sell transactions will be recorded as negative values</p>
+                )}
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Asset Type</label>
                 <select
