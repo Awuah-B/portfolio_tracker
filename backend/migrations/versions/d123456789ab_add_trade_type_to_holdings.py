@@ -30,21 +30,21 @@ def upgrade() -> None:
     # But wait, the model uses Enum(TradeType).
     
     # Let's try to create the enum type.
-    trade_type = postgresql.ENUM('BUY', 'SELL', name='tradetype')
+    trade_type = postgresql.ENUM('buy', 'sell', name='tradetype')
     try:
         trade_type.create(op.get_bind())
     except Exception:
         pass # Type might already exist
 
-    op.add_column('holdings', sa.Column('trade_type', sa.Enum('BUY', 'SELL', name='tradetype'), nullable=True))
+    op.add_column('holdings', sa.Column('trade_type', sa.Enum('buy', 'sell', name='tradetype'), nullable=True))
     
     # Update existing rows to have a default value (optional, but good)
-    op.execute("UPDATE holdings SET trade_type = 'BUY' WHERE trade_type IS NULL")
+    op.execute("UPDATE holdings SET trade_type = 'buy' WHERE trade_type IS NULL")
 
 
 def downgrade() -> None:
     op.drop_column('holdings', 'trade_type')
     # We generally don't drop the Enum type in downgrade as other tables might use it,
     # but here only holdings uses it.
-    trade_type = postgresql.ENUM('BUY', 'SELL', name='tradetype')
+    trade_type = postgresql.ENUM('buy', 'sell', name='tradetype')
     trade_type.drop(op.get_bind())
