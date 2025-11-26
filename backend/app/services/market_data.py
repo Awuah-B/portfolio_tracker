@@ -20,8 +20,11 @@ class MarketDataService:
         
         # In-memory cache with TTL
         self._memory_cache: Dict[str, Dict] = {}
-        self._current_price_ttl = timedelta(minutes=10)  # 10 min for current prices
-        self._historical_price_ttl = timedelta(hours=24)  # 24 hours for historical
+        self._current_price_ttl = timedelta(minutes=15)  # Extended to 15 min
+        self._historical_price_ttl = timedelta(days=7)  # Extended to 7 days
+        
+        # Asset metadata cache (rarely changes)
+        self._asset_name_cache: Dict[str, str] = {}
 
 
     def _get_from_memory_cache(self, key: str, ttl: timedelta) -> Optional[Any]:
@@ -76,7 +79,9 @@ class MarketDataService:
         # Layer 3: Fetch from Yahoo Finance
         for attempt in range(self.max_retries):
             try:
-                time.sleep(self.base_delay * (2 ** attempt))
+                # Only sleep on retries, not the first attempt
+                if attempt > 0:
+                    time.sleep(self.base_delay * (2 ** attempt))
                 logger.debug(f"Fetching data for {ticker} (attempt {attempt + 1})")
 
                 stock = yf.Ticker(ticker)
@@ -138,7 +143,9 @@ class MarketDataService:
             
         for attempt in range(self.max_retries):
             try:
-                time.sleep(self.base_delay * (2 ** attempt))
+                # Only sleep on retries
+                if attempt > 0:
+                    time.sleep(self.base_delay * (2 ** attempt))
                 logger.debug(f"Fetching intraday data for {ticker} (attempt {attempt + 1})")
 
                 stock = yf.Ticker(ticker)
@@ -187,7 +194,9 @@ class MarketDataService:
         
         for attempt in range(self.max_retries):
             try:
-                time.sleep(self.base_delay * (2 ** attempt))
+                # Only sleep on retries
+                if attempt > 0:
+                    time.sleep(self.base_delay * (2 ** attempt))
                 logger.debug(f"Fetching data for {ticker} (attempt {attempt + 1})")
 
                 stock = yf.Ticker(ticker)
@@ -254,7 +263,7 @@ class MarketDataService:
     
     def get_asset_name(self, ticker: str) -> str:
         """
-        Get the long name of an asset.
+        Get the long name of an asset (with aggressive caching).
         
         Args:
             ticker: Stock symbol.
@@ -262,12 +271,21 @@ class MarketDataService:
         Returns:
             The long name of the asset, or the ticker itself if not found.
         """
+        # Check cache first (asset names rarely change)
+        if ticker in self._asset_name_cache:
+            return self._asset_name_cache[ticker]
+        
         try:
             stock = yf.Ticker(ticker)
             info = stock.info
-            return info.get('longName', ticker)
+            name = info.get('longName', ticker)
+            # Cache the result indefinitely (asset names don't change)
+            self._asset_name_cache[ticker] = name
+            return name
         except Exception as e:
             logger.warning(f"Could not fetch asset name for {ticker}: {e}")
+            # Cache the ticker as fallback to avoid repeated failures
+            self._asset_name_cache[ticker] = ticker
             return ticker
         
     def get_price_at_date(self, ticker: str, date: datetime) -> Optional[float]:
