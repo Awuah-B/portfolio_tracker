@@ -97,8 +97,10 @@ def compute_portfolio_summary(holdings: List[Holding], market_data_service: Mark
             
             # For SELL trades, negate the percentage change
             # This represents that selling means you miss out on future gains (or avoid future losses)
+            # Use getattr with default to handle existing holdings that might not have trade_type yet
             from app.models.database import TradeType
-            if holding.trade_type == TradeType.SELL:
+            trade_type = getattr(holding, 'trade_type', TradeType.BUY)
+            if trade_type == TradeType.SELL:
                 percentage_change = -percentage_change
             
             current_value = float(holding.starting_price) * (1 + percentage_change / 100) # Use starting_price
@@ -108,6 +110,10 @@ def compute_portfolio_summary(holdings: List[Holding], market_data_service: Mark
 
         # Get asset info for frontend display
         asset_type_str = holding.asset_type.value # Convert Enum to string
+        
+        # Safely get trade_type with default for backward compatibility
+        from app.models.database import TradeType
+        trade_type = getattr(holding, 'trade_type', TradeType.BUY)
 
         calculated_holdings.append(
             schemas.HoldingCalculatedResponse(
@@ -120,7 +126,8 @@ def compute_portfolio_summary(holdings: List[Holding], market_data_service: Mark
                 last_updated=holding.last_updated,
                 current_price=current_price,
                 percentage_change=percentage_change,
-                asset_info=schemas.AssetInfo(name=asset_name, type=asset_type_str)
+                asset_info=schemas.AssetInfo(name=asset_name, type=asset_type_str),
+                trade_type=trade_type
             )
         )
 
