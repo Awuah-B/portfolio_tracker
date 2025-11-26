@@ -34,7 +34,6 @@ const HoldingsTable = ({ holdings, onRefresh }: Props) => {
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50">
               <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[200px]">Asset</th>
-              <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[100px]">Type</th>
               <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[150px]">Initial Value</th>
               <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[150px]">Current Value</th>
               <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[150px]">Return</th>
@@ -62,14 +61,6 @@ const HoldingsTable = ({ holdings, onRefresh }: Props) => {
                         <div className="text-xs text-slate-500 capitalize font-medium">{holding.asset_type}</div>
                       </div>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${(holding as any).trade_type === 'sell'
-                        ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                        : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      }`}>
-                      {(holding as any).trade_type === 'sell' ? 'SELL' : 'BUY'}
-                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <div className="text-sm font-medium text-slate-900">
@@ -110,7 +101,7 @@ const HoldingsTable = ({ holdings, onRefresh }: Props) => {
             })}
             {holdings.length === 0 && (
               <tr>
-                <td colSpan={isAdmin ? 6 : 5} className="px-6 py-12 text-center text-slate-500">
+                <td colSpan={isAdmin ? 5 : 4} className="px-6 py-12 text-center text-slate-500">
                   <div className="flex flex-col items-center justify-center">
                     <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
                       <span className="text-2xl">💼</span>

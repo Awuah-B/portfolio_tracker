@@ -21,7 +21,6 @@ class HoldingCreateRequest(BaseModel): # This will be used for the API input
     starting_price: float
     purchase_date: datetime
     asset_type: AssetType
-    trade_type: str = "buy"  # "buy" or "sell"
 
 class HoldingUpdate(BaseModel):
     starting_price: Optional[float] = None # Renamed from initial_investment
@@ -33,7 +32,6 @@ class HoldingCalculatedResponse(HoldingBase):
     current_price: Optional[float] = None
     last_updated: datetime
     percentage_change: float
-    trade_type: Optional[str] = "buy"  # Include trade_type in response
     asset_info: Optional[AssetInfo] = None
 
     class Config:

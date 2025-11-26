@@ -2,9 +2,8 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from app.services.websocket_manager import manager
 from starlette.middleware.cors import CORSMiddleware
 from app.api import portfolios, auth
-from app.models.database import SessionLocal, Holding, engine
+from app.models.database import SessionLocal, Holding
 from app.services.market_data import MarketDataService
-from sqlalchemy import inspect, text
 import asyncio
 
 app = FastAPI(title="Portfolio Tracker API")
@@ -74,43 +73,4 @@ async def update_prices_background():
 
 @app.on_event("startup")
 async def startup_event():
-    """Startup tasks including database validation and background price updates."""
-    # Ensure trade_type column exists
-    try:
-        inspector = inspect(engine)
-        columns = [col['name'] for col in inspector.get_columns('holdings')]
-        
-        if 'trade_type' not in columns:
-            print("WARNING: trade_type column not found. Creating it now...")
-            with engine.connect() as conn:
-                # Create enum type if it doesn't exist
-                conn.execute(text("""
-                    DO $$ BEGIN
-                        CREATE TYPE tradetype AS ENUM ('buy', 'sell');
-                    EXCEPTION
-                        WHEN duplicate_object THEN null;
-                    END $$;
-                """))
-                
-                # Add the column
-                conn.execute(text("""
-                    ALTER TABLE holdings 
-                    ADD COLUMN IF NOT EXISTS trade_type tradetype;
-                """))
-                
-                # Set default for existing rows
-                conn.execute(text("""
-                    UPDATE holdings 
-                    SET trade_type = 'buy' 
-                    WHERE trade_type IS NULL;
-                """))
-                
-                conn.commit()
-                print("✓ trade_type column created successfully")
-        else:
-            print("✓ trade_type column exists")
-    except Exception as e:
-        print(f"ERROR during database validation: {e}")
-        # Don't crash the app, let it start anyway
-    
     asyncio.create_task(update_prices_background())

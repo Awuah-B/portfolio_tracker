@@ -113,7 +113,6 @@ def compute_portfolio_summary(holdings: List[Holding], market_data_service: Mark
                 last_updated=holding.last_updated,
                 current_price=current_price,
                 percentage_change=percentage_change,
-                trade_type=holding.trade_type.value if holding.trade_type else "buy",  # Default to 'buy' if None
                 asset_info=schemas.AssetInfo(name=asset_name, type=asset_type_str)
             )
         )

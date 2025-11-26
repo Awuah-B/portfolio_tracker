@@ -48,10 +48,9 @@ class Holding(Base):
     id = Column(String, primary_key=True, index=True)
     portfolio_id = Column(String, ForeignKey("portfolios.id"))
     ticker = Column(String, index=True)
-    starting_price = Column(Float, nullable=False) # Can be negative for SELL
+    starting_price = Column(Float, nullable=False) # Renamed from initial_investment
     purchase_date = Column(DateTime, default=datetime.utcnow)
     asset_type = Column(Enum(AssetType), nullable=False)
-    trade_type = Column(Enum(TradeType), nullable=True, default=TradeType.BUY)  # Nullable for migration
     last_updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     portfolio = relationship("Portfolio", back_populates="holdings")
