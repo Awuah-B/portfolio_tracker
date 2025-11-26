@@ -40,7 +40,12 @@ async def get_current_admin(token: str = Depends(oauth2_scheme)):
 
 @router.post("/login", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    print(f"Login attempt: username='{form_data.username}'")
+    print(f"Expected password length: {len(CONFIG.admin_password)}")
+    print(f"Received password length: {len(form_data.password)}")
+    
     if form_data.username != "admin" or form_data.password != CONFIG.admin_password:
+        print("Login failed: Credentials mismatch")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
