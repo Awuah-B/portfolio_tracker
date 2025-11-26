@@ -26,14 +26,22 @@ const LoginPage: React.FC = () => {
             });
 
             if (!response.ok) {
-                throw new Error('Login failed');
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Login failed:', response.status, errorData);
+                throw new Error(errorData.detail || 'Login failed');
             }
 
             const data = await response.json();
             login(data.access_token);
             navigate('/admin');
         } catch (err) {
-            setError('Invalid credentials. Please try again.');
+            console.error('Login error:', err);
+            console.log('Attempted API URL:', `${API_BASE_URL}/auth/login`);
+            if (err instanceof TypeError && err.message === 'Failed to fetch') {
+                setError('Network error: Could not connect to server. Check API URL.');
+            } else {
+                setError('Invalid credentials. Please try again.');
+            }
         }
     };
 
