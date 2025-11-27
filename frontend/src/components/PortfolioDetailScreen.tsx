@@ -127,7 +127,8 @@ const PortfolioDetailScreen: React.FC = () => {
       await axios.post(`${API_BASE_URL}/portfolios/${portfolioId}/holdings`, {
         ticker: selectedTicker,
         starting_price: startingPrice,
-        purchase_date: `${purchaseDate}T00:00:00`,
+        purchase_date: new Date(purchaseDate).toISOString(),
+        trade_type: 'buy', // Assuming 'buy' for adding an asset
         asset_type: ({
           'crypto_tickers': 'crypto',
           'stocks_tickers': 'stock',
