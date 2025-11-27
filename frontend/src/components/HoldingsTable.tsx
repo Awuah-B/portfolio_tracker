@@ -58,7 +58,15 @@ const HoldingsTable = ({ holdings, onRefresh }: Props) => {
                       </div>
                       <div>
                         <div className="text-sm font-bold text-slate-900">{holding.ticker}</div>
-                        <div className="text-xs text-slate-500 capitalize font-medium">{holding.asset_type}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-xs text-slate-500 capitalize font-medium">{holding.asset_type}</div>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${holding.trade_type === 'buy'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : 'bg-amber-50 text-amber-700 border border-amber-200'
+                            }`}>
+                            {holding.trade_type?.toUpperCase() || 'BUY'}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </td>

@@ -57,6 +57,7 @@ const PortfolioDetailScreen: React.FC = () => {
   const [selectedTicker, setSelectedTicker] = useState<string>('');
   const [startingPrice, setStartingPrice] = useState<number | ''>('');
   const [purchaseDate, setPurchaseDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy');
   const [isFetchingPrice, setIsFetchingPrice] = useState(false);
 
   // Fetch all portfolios for sidebar
@@ -128,7 +129,7 @@ const PortfolioDetailScreen: React.FC = () => {
         ticker: selectedTicker,
         starting_price: startingPrice,
         purchase_date: new Date(purchaseDate).toISOString(),
-        trade_type: 'buy', // Assuming 'buy' for adding an asset
+        trade_type: tradeType, // Use selected trade type
         asset_type: ({
           'crypto_tickers': 'crypto',
           'stocks_tickers': 'stock',
@@ -147,6 +148,7 @@ const PortfolioDetailScreen: React.FC = () => {
       setSelectedTicker('');
       setStartingPrice('');
       setPurchaseDate('');
+      setTradeType('buy'); // Reset to default
       setError(null);
       fetchPortfolioDetails();
     } catch (err: unknown) {
@@ -356,6 +358,7 @@ const PortfolioDetailScreen: React.FC = () => {
                   setError(null);
                   setSelectedAssetType('');
                   setSelectedTicker('');
+                  setTradeType('buy');
                 }}
                 className="text-slate-400 hover:text-white transition-colors"
               >
@@ -380,6 +383,18 @@ const PortfolioDetailScreen: React.FC = () => {
                       {type.replace('_tickers', '').replace(/./, (c) => c.toUpperCase())}
                     </option>
                   ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Trade Type</label>
+                <select
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all appearance-none"
+                  value={tradeType}
+                  onChange={(e) => setTradeType(e.target.value as 'buy' | 'sell')}
+                >
+                  <option value="buy">Buy</option>
+                  <option value="sell">Sell</option>
                 </select>
               </div>
 
@@ -440,6 +455,7 @@ const PortfolioDetailScreen: React.FC = () => {
                   setSelectedTicker('');
                   setStartingPrice('');
                   setPurchaseDate('');
+                  setTradeType('buy');
                 }}
                 className="px-5 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors font-medium"
               >

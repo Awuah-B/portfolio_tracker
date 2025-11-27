@@ -12,6 +12,7 @@ export type Holding = {
   starting_price: number;
   purchase_date: string;
   asset_type: string;
+  trade_type: string;
   last_updated: string;
   current_price: number;
   // These are calculated fields, not directly from DB
