@@ -85,25 +85,14 @@ async def add_holding_to_portfolio(
     if not market_data_service.validate_ticker(holding_request.ticker):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid ticker symbol: {holding_request.ticker}")
 
-    # Negate starting_price if it's a SELL transaction
-    starting_price = holding_request.starting_price
-    trade_type = holding_request.trade_type.lower()
-    
-    if trade_type == "sell":
-        starting_price = -abs(starting_price)  # Make it negative
-    
-    # Convert trade_type string to enum
-    from app.models.database import TradeType
-    trade_type_enum = TradeType.BUY if trade_type == "buy" else TradeType.SELL
-
     db_holding = Holding(
         id=str(uuid.uuid4()),
         portfolio_id=portfolio_id,
         ticker=holding_request.ticker,
-        starting_price=starting_price,  # Will be negative for SELL
+        starting_price=holding_request.starting_price,
         purchase_date=holding_request.purchase_date,
         asset_type=holding_request.asset_type,
-        trade_type=trade_type_enum
+        trade_type=holding_request.trade_type
     )
     db.add(db_holding)
     db.commit()
@@ -117,10 +106,10 @@ async def add_holding_to_portfolio(
         starting_price=float(db_holding.starting_price), # Use starting_price
         purchase_date=db_holding.purchase_date,
         asset_type=db_holding.asset_type,
+        trade_type=db_holding.trade_type,
         last_updated=db_holding.last_updated,
         current_price=current_price,
-        percentage_change=0.0, # Placeholder, will be calculated in summary
-        trade_type=db_holding.trade_type.value if db_holding.trade_type else "buy"  # Default to 'buy' if None
+        percentage_change=0.0 # Placeholder, will be calculated in summary
     )
 
 @router.put("/holdings/{holding_id}", response_model=schemas.HoldingCalculatedResponse)
@@ -150,6 +139,7 @@ async def update_holding(
         starting_price=float(db_holding.starting_price), # Use starting_price
         purchase_date=db_holding.purchase_date,
         asset_type=db_holding.asset_type,
+        trade_type=db_holding.trade_type,
         last_updated=db_holding.last_updated,
         current_price=current_price,
         percentage_change=0.0 # Placeholder, will be calculated in summary

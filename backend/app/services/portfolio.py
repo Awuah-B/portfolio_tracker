@@ -93,7 +93,16 @@ def compute_portfolio_summary(holdings: List[Holding], market_data_service: Mark
             percentage_change = 0.0
             current_value = float(holding.starting_price) # Use starting_price
         else:
+            # Calculate base percentage change
             percentage_change = ((current_price - initial_price_per_unit) / initial_price_per_unit) * 100
+            
+            # For SELL trades, invert the percentage change
+            # If asset price goes up, sell position loses (negative return)
+            # If asset price goes down, sell position gains (positive return)
+            from app.models.database import TradeType
+            if holding.trade_type == TradeType.SELL:
+                percentage_change = -percentage_change
+            
             current_value = float(holding.starting_price) * (1 + percentage_change / 100) # Use starting_price
 
         total_current_value += current_value
