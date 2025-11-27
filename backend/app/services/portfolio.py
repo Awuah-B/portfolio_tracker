@@ -119,6 +119,7 @@ def compute_portfolio_summary(holdings: List[Holding], market_data_service: Mark
                 starting_price=float(holding.starting_price), # Use starting_price
                 purchase_date=holding.purchase_date,
                 asset_type=holding.asset_type,
+                trade_type=holding.trade_type,  # Add missing trade_type field
                 last_updated=holding.last_updated,
                 current_price=current_price,
                 percentage_change=percentage_change,
